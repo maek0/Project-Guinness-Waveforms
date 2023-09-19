@@ -4,18 +4,12 @@ def guinnessFilter():
     import numpy as np
     import os
     import sys
+    import CheckFile
 
     filepath = input('Enter the name or file path of the oscilloscope .csv output: ')
 
-    if os.path.exists(filepath):
-        if filepath[-4:]==".csv":
-            print("File found. File is a .csv file.")
-        else:
-            print("File found, but it is not a .csv file. Double check input file type and name.")
-    else:
-        print("File was not found. Double check input file path and file name.")
-        sys.exit()
-
+    CheckFile.CheckFile(filepath)
+    
     while True:
         try:
             voltageLimit = input('Enter the voltage limit of the Guinness generator of the captured waveform: ')
