@@ -5,28 +5,12 @@ def guinnessFilter():
     import os
     import sys
     import CheckFile
+    import VoltageCheck
 
     filepath = input('Enter the name or file path of the oscilloscope .csv output: ')
 
     CheckFile.CheckFile(filepath)
-
-    while True:
-        voltageLimit = input('Enter the voltage limit of the Guinness generator of the captured waveform: ')
-        try:
-            voltageLimit = int(voltageLimit)
-            if type(voltageLimit)==str:
-                raise TypeError
-            elif voltageLimit>150 or voltageLimit<0:
-                raise ValueError
-            elif voltageLimit<=150 and voltageLimit>=0:
-                break
-            else:
-                print("Invalid input.")
-                raise TypeError
-        except ValueError:
-            print("Not a valid input. Value must be an integer in the range from 0 to 150.")
-        except TypeError:
-            print("Not a valid input. Value must be an integer in the range from 0 to 150.")
+    VoltageCheck.VoltageCheck()
     
     headers = ["Time", "Voltage"]
     csvFile = open(filepath)
@@ -46,6 +30,15 @@ def guinnessFilter():
     
     plt.show()
     
-    x_peaks, xpeak_properties = signal.find_peaks(x)
+    y_peaks, ypeak_properties = signal.find_peaks(y, height=5,prominence=15,distance=50)   
+    # the distance likely will have to change when the frequency is fixed to be 2Hz
+    
+    plt.scatter(x[y_peaks],y[y_peaks])
+    plt.plot(x,y)
+    plt.show()
+    # this plot won't have to stay here, currently being used to validate settings
+    
+    # I have the max points... now I need to use the 66%(voltage limit) to divide the points into two sections
+    # the two sections will have a linear fit ==> slope of the two sections 
 
 guinnessFilter()
