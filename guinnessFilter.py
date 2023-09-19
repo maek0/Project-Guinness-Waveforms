@@ -9,32 +9,24 @@ def guinnessFilter():
     filepath = input('Enter the name or file path of the oscilloscope .csv output: ')
 
     CheckFile.CheckFile(filepath)
-    
-    while True:
-        try:
-            voltageLimit = input('Enter the voltage limit of the Guinness generator of the captured waveform: ')
-        except type(voltageLimit)==float:
-            print("Input must be an integer.")
-        except type(voltageLimit)==str:
-            print("Not a valid input. Value must be an integer in the range from 0 to 150.")
-        except voltageLimit>150 or voltageLimit<0:
-            print("Not a valid input. Value must be an integer in the range from 0 to 150.")
-        else:
-            break
 
-    # if type(voltageLimit)==int:
-    #     pass
-    # elif type(voltageLimit)==float:
-    #     print("Input must be an integer.")
-    #     sys.exit()
-    # elif type(voltageLimit)==str:
-    #     print("Not a valid input. Value must be an integer in the range from 0 to 150.")
-    #     sys.exit()
-    # elif voltageLimit>150 or voltageLimit<0:
-    #     print("Not a valid input. Value must be an integer in the range from 0 to 150.")
-    #     sys.exit()
-    # else:
-    #     sys.exit()
+    while True:
+        voltageLimit = input('Enter the voltage limit of the Guinness generator of the captured waveform: ')
+        try:
+            voltageLimit = int(voltageLimit)
+            if type(voltageLimit)==str:
+                raise TypeError
+            elif voltageLimit>150 or voltageLimit<0:
+                raise ValueError
+            elif voltageLimit<=150 and voltageLimit>=0:
+                break
+            else:
+                print("Invalid input.")
+                raise TypeError
+        except ValueError:
+            print("Not a valid input. Value must be an integer in the range from 0 to 150.")
+        except TypeError:
+            print("Not a valid input. Value must be an integer in the range from 0 to 150.")
     
     headers = ["Time", "Voltage"]
     csvFile = open(filepath)
