@@ -8,9 +8,10 @@ def guinnessFilter():
     import VoltageCheck
 
     filepath = input('Enter the name or file path of the oscilloscope .csv output: ')
-
     CheckFile.CheckFile(filepath)
-    VoltageCheck.VoltageCheck()
+    
+    voltageLimit = input('Enter the voltage limit of the Guinness generator of the captured waveform: ')
+    VoltageCheck.VoltageCheck(voltageLimit)
     
     headers = ["Time", "Voltage"]
     csvFile = open(filepath)
@@ -30,15 +31,30 @@ def guinnessFilter():
     
     plt.show()
     
-    y_peaks, ypeak_properties = signal.find_peaks(y, height=5,prominence=15,distance=50)   
+    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=5,prominence=15,distance=50)
+    y_peaks_yvalues = ypeak_properties["peak_heights"]
     # the distance likely will have to change when the frequency is fixed to be 2Hz
     
-    plt.scatter(x[y_peaks],y[y_peaks])
+    plt.scatter(x[y_peaks_xvalues],y[y_peaks_xvalues])
     plt.plot(x,y)
     plt.show()
     # this plot won't have to stay here, currently being used to validate settings
     
     # I have the max points... now I need to use the 66%(voltage limit) to divide the points into two sections
-    # the two sections will have a linear fit ==> slope of the two sections 
+    # the two sections will have a linear fit ==> slope of the two sections
+    
+    cutoff = 0.66*float(voltageLimit)
+    ind = np.where(y_peaks_yvalues>=cutoff)[0][0]
+    print(ind)
+    print(y_peaks_yvalues[ind])
+    fiveVoltRampY = y_peaks_yvalues[:ind]
+    fiveVoltRampX = x[y_peaks_xvalues[:ind]]
+    twoVoltRampY = y_peaks_yvalues[ind:]
+    twoVoltRampX = x[y_peaks_xvalues[ind:]]
 
+    plt.scatter(x[y_peaks_xvalues],y[y_peaks_xvalues])
+    plt.plot(x,y)
+    plt.plot(fiveVoltRampX,fiveVoltRampY)
+    plt.plot(twoVoltRampX,twoVoltRampY)
+    plt.show()
 guinnessFilter()
