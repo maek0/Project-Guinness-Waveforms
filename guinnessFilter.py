@@ -2,9 +2,10 @@ def guinnessFilter():
     import matplotlib.pyplot as plt
     from scipy import signal
     import numpy as np
-    from CheckFile import CheckFile
-    from VoltageCheck import VoltageCheck
-    from linearRegression import linearRegression
+    # from CheckFile import CheckFile
+    # from VoltageCheck import VoltageCheck
+    # from linearRegression import linearRegression
+    from support_functions import CheckFile, VoltageCheck, linearRegression
     import datetime
 
     datetime_rn = datetime.datetime.now()
@@ -36,7 +37,7 @@ def guinnessFilter():
     
     y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=5,prominence=15,distance=50)
     y_peaks_yvalues = ypeak_properties["peak_heights"]
-    # the distance likely will have to change when the frequency is fixed to be 2Hz
+    # the distance might have to change when the frequency is fixed to be 2Hz
     
     # plt.scatter(x[y_peaks_xvalues],y[y_peaks_xvalues])
     # plt.plot(x,y)
@@ -65,8 +66,6 @@ def guinnessFilter():
     plt.xlabel(headers[0])
     plt.ylabel(headers[1])
     
-    # plt.plot(fiveVoltRampX, fiveV_fit, color = 'green', label = "y = {:.2f}x + {:.2f}\n$R^2$ = {:.2f}".format(float(fiveV_slope), float(fiveV_intercept), float(fiveV_rsq)))
-    # plt.plot(twoVoltRampX, twoV_fit, color = 'orange', label = "y = {:.2f}x + {:.2f}\n$R^2$ = {:.2f}".format(float(twoV_slope), float(twoV_intercept), float(twoV_rsq)))
     plt.plot(fiveVoltRampX, fiveV_fit, color = 'green', label = "y = {:.2f}x + {:.2f}\n$R^2$ = {:.2f}".format(fiveV_slope[0], fiveV_intercept, fiveV_rsq))
     plt.plot(twoVoltRampX, twoV_fit, color = 'orange', label = "y = {:.2f}x + {:.2f}\n$R^2$ = {:.2f}".format(twoV_slope[0], twoV_intercept, twoV_rsq))
     plt.xlim(min(x)-1,max(x)+1)
