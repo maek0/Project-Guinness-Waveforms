@@ -22,22 +22,23 @@ def guinnessFilter():
     x = csvArray[2:,0]
     y = csvArray[2:,1]
     
-    plt.plot(x,y)
+    # plt.plot(x,y)
     # xaxis = range(int(min(x)), int(max(x)), 2)
     # yaxis = range(int(min(y)), int(max(y)), 5)
     # plt.xticks(xaxis)
     # plt.yticks(yaxis)
-    
     # plt.show()
     
-    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=5,prominence=15,distance=50)
+    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=2.5,prominence=15,distance=50)
     y_peaks_yvalues = ypeak_properties["peak_heights"]
-    # the distance might have to change when the frequency is fixed to be 2Hz
     
     # plt.scatter(x[y_peaks_xvalues],y[y_peaks_xvalues])
     # plt.plot(x,y)
     # plt.show()
     # this plot won't have to stay here, currently being used to validate settings
+    
+    first_peakX = x[y_peaks_xvalues[0]]
+    first_peakY = y_peaks_yvalues[0]
     
     cutoff = 0.66*float(voltageLimit)
     ind = np.where(y_peaks_yvalues>=cutoff)[0][0]
@@ -58,6 +59,8 @@ def guinnessFilter():
     
     plt.scatter(fiveVoltRampX,fiveVoltRampY, color = 'green')
     plt.scatter(twoVoltRampX,twoVoltRampY, color = 'orange')
+    
+    plt.plot(first_peakX,first_peakY, "x", color = 'black', label = "First Peak = {:.2f}V".format(first_peakY), markersize = 10)
     
     plt.title("Guinness Generator Output, Voltage Limit = {}V\nInput file name: '{}'".format(voltageLimit, filename))
     plt.text(min(x),min(y),"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
