@@ -85,8 +85,7 @@ def plotting_peaks(x, y, voltageLimit, filename, str_datetime_rn, headers):
     
     plt.scatter(fiveVoltRampX,fiveVoltRampY, color = 'green')
     plt.scatter(twoVoltRampX,twoVoltRampY, color = 'orange')
-    
-    plt.plot(first_peakX,first_peakY, "x", color = "black", label = "First Peak = {:.2f}V".format(first_peakY), markersize = 8, markeredgewidth = 2)
+
     plt.axhline(cutoff, label = "{:.2f}V".format(cutoff), linestyle = "--", color = "black")
     
     plt.title("Guinness Generator Output, Voltage Limit = {}V\nInput file name: '{}'".format(voltageLimit, filename))
@@ -97,6 +96,8 @@ def plotting_peaks(x, y, voltageLimit, filename, str_datetime_rn, headers):
     plt.plot(fiveVoltRampX, fiveV_fit, color = 'green', label = "y = {:.2f}x + {:.2f}\n$R^2$ = {:.2f}".format(fiveV_slope[0], fiveV_intercept, fiveV_rsq))
     plt.plot(twoVoltRampX, twoV_fit, color = 'orange', label = "y = {:.2f}x + {:.2f}\n$R^2$ = {:.2f}".format(twoV_slope[0], twoV_intercept, twoV_rsq))
     
+    plt.plot(first_peakX,first_peakY, "x", color = "black", label = "First Peak = {:.2f}V".format(first_peakY), markersize = 8, markeredgewidth = 2)
+
     plt.xlim(min(x),max(x))
     plt.ylim(min(y)-3,max(y)+3)
     plt.legend(loc="lower left")
