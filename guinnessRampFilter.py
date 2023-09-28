@@ -2,9 +2,8 @@ def guinnessRampFilter():
     import numpy as np
     from support_functions import CheckFile, VoltageCheck, plotting_peaks
     import datetime
-    import fpdf
     
-    # need matplotlib, scipy, numpy, scikit (pip install numpy scikit-learn statsmodels), fpdf
+    # need matplotlib, scipy, numpy, scikit (pip install numpy scikit-learn statsmodels)
 
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
