@@ -1,8 +1,6 @@
 def guinnessTHD():
     import numpy as np
-    import matplotlib.pyplot as plt
-    
-    from support_functions import CheckFile, VoltageCheck, power_spectral_density
+    from support_functions import CheckFile, VoltageCheck, THD, plotTHD
     import datetime
     
     # need matplotlib, scipy, numpy, scikit (pip install numpy scikit-learn statsmodels)
@@ -10,7 +8,7 @@ def guinnessTHD():
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
 
-    filepath = input('This function is intended to calculate the total harmonic distortion (THD) of the Guinness Generator.\nEnter the name or file path of the oscilloscope .csv output: ')
+    filepath = input('This function is intended to calculate the total harmonic distortion (THD) of the Guinness Generator and is intended to take in a .csv with only the pulse envelope.\nEnter the name or file path of the oscilloscope .csv output: ')
     filename = CheckFile(filepath)
     
     voltageLimit = VoltageCheck()
@@ -21,4 +19,8 @@ def guinnessTHD():
     x = csvArray[2:,0]
     y = csvArray[2:,1]
     
-    Pxx = power_spectral_density(x, y, voltageLimit)
+    thd = THD(x,y)
+    print(thd)
+    # plotTHD(thd, x, y, voltageLimit, filename, str_datetime_rn, headers)
+    
+guinnessTHD()

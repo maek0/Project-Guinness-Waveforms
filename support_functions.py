@@ -3,6 +3,8 @@ import os
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from scipy import signal
+from scipy.fftpack import fft
+from scipy.fftpack import fftfreq
 import matplotlib.pyplot as plt
 
 def CheckFile(filepath):
@@ -104,20 +106,42 @@ def plotting_peaks(x, y, voltageLimit, filename, str_datetime_rn, headers):
     
     plt.show()
     
-def power_spectral_density(x, y, voltageLimit):
-    sample_fs = (max(x)-min(x))/len(x)
-    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=voltageLimit,prominence=15,distance=50)
-    # y_peaks_yvalues = ypeak_properties["peak_heights"]
+def THD(x,y):
     
-    window_start_x = x[y_peaks_xvalues[0]]
-    # window_start_y = y_peaks_yvalues[0]
+    xN = len(x)
+    yN = len(y)
+    v = np.abs(xN - yN)
     
-    window_end_x = x[y_peaks_xvalues[-1]]
-    # window_end_y = y_peaks_yvalues[-1]
+    if v > 0:
+        x = x[:len(x)-v]
+        y = y[:len(y)-v]
     
-    pulse_window = [window_start_x, window_end_x]
+    T = 1.0/xN
+    yf = np.abs(fft(y))
+    xf = fftfreq(xN,T)[:xN//2]
+    plt.plot(xf, 2.0/xN * np.abs(yf[0:xN//2]))
+    # plt.plot(xf, yf)
     
-    Pxx = plt.psd(y,Fs=sample_fs,window=pulse_window)
-    plt.show
+    sq_sum = 0.0
+    for i in range (len(yf)):
+        sq_sum += yf[i]**2
     
-    return Pxx
+    sq_harmonics = sq_sum - (max(yf))**2.0
+    thd = 100*sq_harmonics**0.5 / max(yf)
+    plt.show()
+    
+    return thd
+
+def plotTHD(thd, x, y, voltageLimit, filename, str_datetime_rn, headers):
+    plt.plot(x,y, color = 'blue')
+    
+    plt.title("Guinness Generator Pulse Burst, THD = {}%\nVoltage Limit = {}V, Input file name: '{}'".format(thd,voltageLimit, filename))
+    plt.text(min(x)+1,max(y)-3,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
+    plt.xlabel(headers[0])
+    plt.ylabel(headers[1])
+    
+    plt.xlim(min(x),max(x))
+    plt.ylim(min(y)-3,max(y)+3)
+    plt.legend(loc="lower left")
+    
+    plt.show()
