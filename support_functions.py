@@ -103,3 +103,21 @@ def plotting_peaks(x, y, voltageLimit, filename, str_datetime_rn, headers):
     plt.legend(loc="lower left")
     
     plt.show()
+    
+def power_spectral_density(x, y, voltageLimit):
+    sample_fs = (max(x)-min(x))/len(x)
+    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=voltageLimit,prominence=15,distance=50)
+    # y_peaks_yvalues = ypeak_properties["peak_heights"]
+    
+    window_start_x = x[y_peaks_xvalues[0]]
+    # window_start_y = y_peaks_yvalues[0]
+    
+    window_end_x = x[y_peaks_xvalues[-1]]
+    # window_end_y = y_peaks_yvalues[-1]
+    
+    pulse_window = [window_start_x, window_end_x]
+    
+    Pxx = plt.psd(y,Fs=sample_fs,window=pulse_window)
+    plt.show
+    
+    return Pxx
