@@ -21,5 +21,3 @@ def guinnessRampFilter(filepath):
     y = csvArray[2:,1]
     
     plotting_peaks(x, y, voltageLimit, filename, str_datetime_rn, headers)
-    
-guinnessRampFilter()

@@ -21,5 +21,3 @@ def guinnessTHD(filepath):
     y = csvArray[2:-2,1]
     
     THD(x, y, voltageLimit, filename, str_datetime_rn, headers)
-    
-guinnessTHD()
