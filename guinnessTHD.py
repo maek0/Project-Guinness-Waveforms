@@ -1,6 +1,6 @@
 def guinnessTHD():
     import numpy as np
-    from support_functions import CheckFile, VoltageCheck, THD, plotTHD
+    from support_functions import CheckFile, VoltageCheck, THD
     import datetime
     
     # need matplotlib, scipy, numpy, scikit (pip install numpy scikit-learn statsmodels)
@@ -16,11 +16,9 @@ def guinnessTHD():
     headers = ["Time", "Voltage"]
     csvFile = open(filepath)
     csvArray = np.genfromtxt(csvFile, delimiter=",")
-    x = csvArray[2:,0]
-    y = csvArray[2:,1]
+    x = csvArray[2:-2,0]
+    y = csvArray[2:-2,1]
     
-    thd = THD(x,y)
-    print(thd)
-    # plotTHD(thd, x, y, voltageLimit, filename, str_datetime_rn, headers)
+    THD(x, y, voltageLimit, filename, str_datetime_rn, headers)
     
 guinnessTHD()
