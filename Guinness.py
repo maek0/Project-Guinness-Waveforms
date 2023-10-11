@@ -25,10 +25,10 @@ while True:
         break
 
     if event1 == 'Analyze Guinness Voltage Ramp':
-        guinnessRampFilter("-FILE-")
+        guinnessRampFilter(values1['-FILE-'])
 
     if event1 == 'Analyze Guinness Pulse Burst':
-        guinnessTHD("-FILE-")
+        guinnessTHD(values1['-FILE-'])
 
 
 '''To create your EXE file from your program that uses PySimpleGUI, my_program.py, enter this command in your Windows command prompt:
