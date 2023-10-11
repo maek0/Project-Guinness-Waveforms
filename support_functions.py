@@ -12,16 +12,36 @@ def CheckFile(filepath):
         if filepath[-1] == "/":
             filepath = filepath[:-1]
         elif filepath[-4:] == ".csv":
-            print("File found. File is a .csv file.")
+            status = True
             return os.path.basename(filepath)
         else:
-            print(
-                "File found, but it is not a .csv file. Double check input file type and name."
-            )
-            sys.exit()
+            status = False
     else:
-        print("File was not found. Double check input file path and file name.")
-        sys.exit()
+        status = False
+    return status
+
+
+def VoltageCheck(voltageLimit):
+    if type(voltageLimit) == float:
+        voltageLimit = int(voltageLimit)
+
+        if voltageLimit > 150 or voltageLimit < 0:
+            status = False
+        elif voltageLimit <= 150 and voltageLimit >= 0:
+            status = True
+            return status
+        
+    elif type(voltageLimit) == int:
+        if voltageLimit > 150 or voltageLimit < 0:
+            status = False
+        elif voltageLimit <= 150 and voltageLimit >= 0:
+            status = True
+            return status
+
+    else:
+        status = False
+
+    return status
 
 
 def linearRegression(x, y):
@@ -46,35 +66,8 @@ def linearRegression(x, y):
     return r_sq, slope, intercept, y_predict
 
 
-def VoltageCheck(voltageLimit):
-    while True:
-        # voltageLimit = input(
-        #     "Enter the voltage limit of the Guinness generator of the captured waveform: "
-        # )
-        try:
-            voltageLimit = int(voltageLimit)
-            if type(voltageLimit) == str:
-                raise TypeError
-            elif voltageLimit > 150 or voltageLimit < 0:
-                raise ValueError
-            elif voltageLimit <= 150 and voltageLimit >= 0:
-                return voltageLimit
-                break
-            else:
-                print("Invalid input.")
-                raise TypeError
-        except ValueError:
-            print(
-                "Not a valid input. Value must be an integer in the range from 0 to 150."
-            )
-            continue
-        except TypeError:
-            print(
-                "Not a valid input. Value must be an integer in the range from 0 to 150."
-            )
-            continue
-
-def plotting_peaks(x, y, voltageLimit, filename, str_datetime_rn, headers):
+def plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers):
+    filename = os.path.basename(filepath)
     # find the indices of the peaks of the output energy signal (not including voltage checks)
     y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=2.5,prominence=15,distance=50)
 
@@ -138,7 +131,9 @@ def plotting_peaks(x, y, voltageLimit, filename, str_datetime_rn, headers):
     # display the plot
     plt.show()
     
-def THD(x, y, voltageLimit, filename, str_datetime_rn, headers):
+def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
+    filename = os.path.basename(filepath)
+
     xN = len(x)
     yN = len(y)
     v = xN - yN
