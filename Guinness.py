@@ -22,50 +22,53 @@ layout = [[sg.Text('Enter a waveform file to evaluate.')],
 win1 = sg.Window('Guinness Waveform Analyzer (ST-0001-066-101A)', layout)
 
 while True:
-    event1, values1 = win1.read(timeout=100)
-    if event1 == sg.WIN_CLOSED or event1 == 'Exit':
+    event, value = win1.read(timeout=100)
+    if event == sg.WIN_CLOSED or event == 'Exit':
         break
 
-    if event1 == 'Analyze Guinness Voltage Ramp':
-        if values1['-FILE-'] != [] and values1["-VOLT-"] != []:
-
-            fileGood = CheckFile(values1['-FILE-'])
-            voltageGood = VoltageCheck(values1['-VOLT-'])
+    if event == 'Analyze Guinness Voltage Ramp':
+        if value['-FILE-'] != '' and value["-VOLT-"] != '':
+            
+            fileGood = CheckFile(value['-FILE-'])
+            voltageGood = VoltageCheck(value['-VOLT-'])
 
             if fileGood and voltageGood:
-                guinnessRampFilter(values1['-FILE-'], values1["-VOLT-"])
+                guinnessRampFilter(value['-FILE-'], value["-VOLT-"])
 
             elif not fileGood and voltageGood:
-                values1['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
+                value['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
+                win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
             elif fileGood and not voltageGood:
-                values1['-OUTPUT-'] = "Not a valid input. Value must be an integer in the range from 0 to 150."
+                value['-OUTPUT-'] = "Not a valid input. Value must be an integer in the range from 0 to 150."
+                win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
             elif not fileGood and not voltageGood:
-                values1['-OUTPUT-'] = "Invalid file and voltage limit."
+                value['-OUTPUT-'] = "Invalid file and voltage limit."
+                win1['-OUTPUT-'].update(value['-OUTPUT-'])
         
 
-        elif values1['-FILE-'] == [] or values1["-VOLT-"] == []:
-            err = "Both the filepath and voltage limit must be entered."
-            win1['-OUTPUT-'].update(err)
+        elif value['-FILE-'] == '' or value["-VOLT-"] == '':
+            value['-OUTPUT-'] = "Both the filepath and voltage limit must be entered."
+            win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
-    if event1 == 'Analyze Guinness Pulse Burst':
-        if values1['-FILE-'] != [] and values1["-VOLT-"] != []:
-            CheckFile(values1['-VOLT-'])
+    if event == 'Analyze Guinness Pulse Burst':
+        if value['-FILE-'] != [] and value["-VOLT-"] != []:
+            CheckFile(value['-VOLT-'])
 
             if fileGood and voltageGood:
-                guinnessTHD(values1['-FILE-'], values1["-VOLT-"])
+                guinnessTHD(value['-FILE-'], value["-VOLT-"])
 
             elif not fileGood and voltageGood:
-                values1['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
+                value['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
 
             elif fileGood and not voltageGood:
-                values1['-OUTPUT-'] = "Not a valid input. Value must be an integer in the range from 0 to 150."
+                value['-OUTPUT-'] = "Not a valid input. Value must be an integer in the range from 0 to 150."
 
             elif not fileGood and not voltageGood:
-                values1['-OUTPUT-'] = "Invalid file and voltage limit."
+                value['-OUTPUT-'] = "Invalid file and voltage limit."
 
-        elif values1['-FILE-'] == [] or values1["-VOLT-"] == []:
+        elif value['-FILE-'] == [] or value["-VOLT-"] == []:
             err = "Both the filepath and voltage limit must be entered."
             win1['-OUTPUT-'].update(err)
 
