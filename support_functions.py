@@ -46,11 +46,11 @@ def linearRegression(x, y):
     return r_sq, slope, intercept, y_predict
 
 
-def VoltageCheck():
+def VoltageCheck(voltageLimit):
     while True:
-        voltageLimit = input(
-            "Enter the voltage limit of the Guinness generator of the captured waveform: "
-        )
+        # voltageLimit = input(
+        #     "Enter the voltage limit of the Guinness generator of the captured waveform: "
+        # )
         try:
             voltageLimit = int(voltageLimit)
             if type(voltageLimit) == str:

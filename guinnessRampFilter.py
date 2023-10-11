@@ -1,4 +1,4 @@
-def guinnessRampFilter():
+def guinnessRampFilter(filepath):
     import numpy as np
     from support_functions import CheckFile, VoltageCheck, plotting_peaks
     import datetime
@@ -8,10 +8,11 @@ def guinnessRampFilter():
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
 
-    filepath = input('This function is intended to analyze the voltage ramp rate of the Guinness Generator in accordance with its product requirements.\nEnter the name or file path of the oscilloscope .csv output: ')
+    # filepath = input('This function is intended to analyze the voltage ramp rate of the Guinness Generator in accordance with its product requirements.\nEnter the name or file path of the oscilloscope .csv output: ')
     filename = CheckFile(filepath)
     
-    voltageLimit = VoltageCheck()
+    voltageLimit = input("Enter the voltage limit of the Guinness generator of the captured waveform: ")
+    VoltageCheck(voltageLimit)
     
     headers = ["Time", "Voltage"]
     csvFile = open(filepath)
