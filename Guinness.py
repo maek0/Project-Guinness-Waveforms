@@ -2,8 +2,6 @@ import PySimpleGUI as sg
 from guinnessRampFilter import guinnessRampFilter
 from guinnessTHD import guinnessTHD
 from support_functions import CheckFile, VoltageCheck
-import sys
-import os
 
 sg.theme('DefaultNoMoreNagging')
 

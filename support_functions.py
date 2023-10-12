@@ -11,13 +11,16 @@ def CheckFile(filepath):
     if os.path.exists(filepath):
         if filepath[-1] == "/":
             filepath = filepath[:-1]
+
         elif filepath[-4:] == ".csv":
             status = True
-            # return os.path.basename(filepath)
+
         else:
             status = False
+
     else:
         status = False
+        
     return status
 
 
@@ -33,12 +36,14 @@ def VoltageCheck(voltageLimit):
 
         if voltageLimit > 150 or voltageLimit < 0:
             status = False
+
         elif voltageLimit <= 150 and voltageLimit >= 0:
             status = True
         
     elif type(voltageLimit) == int:
         if voltageLimit > 150 or voltageLimit < 0:
             status = False
+            
         elif voltageLimit <= 150 and voltageLimit >= 0:
             status = True
 
