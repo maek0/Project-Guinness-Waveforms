@@ -1,4 +1,9 @@
 import PySimpleGUI as sg
+from guinnessRampFilter import guinnessRampFilter
+from guinnessTHD import guinnessTHD
+from support_functions import CheckFile, VoltageCheck
+import sys
+import os
 
 sg.theme('DefaultNoMoreNagging')
 
@@ -7,36 +12,72 @@ sg.theme('DefaultNoMoreNagging')
 
 # event, values = sg.Window('File Compare', layout).read(close=True)
 
-layout = [[sg.Text('Guinness Waveform Analyzer (ST-0001-066-101A)'),],
-          [sg.Input(do_not_clear=True)],
-          [sg.Button('Analyze Guinness Voltage Ramp'),sg.Button('Analyze Guinness Pulse Burst'), sg.Button('Exit')],
-          [sg.Input(key='-FILE-', visible=False, enable_events=True), sg.FileBrowse()]]
+layout = [[sg.Text('Enter a waveform file to evaluate.')],
+          [sg.Text('File:', size=(3, 1)), sg.Input(do_not_clear=True, key="-FILE-"), sg.FileBrowse()],
+          [sg.Text('Enter the voltage limit of the waveform.')],
+          [sg.Text('Voltage Limit:', size=(11, 1)), sg.Input(key="-VOLT-", do_not_clear=True)],
+          [sg.Text(size=(50, 3), key='-OUTPUT-')],
+          [sg.Button('Analyze Guinness Voltage Ramp'), sg.Button('Analyze Guinness Pulse Burst'), sg.Button('Exit')]]
 
 win1 = sg.Window('Guinness Waveform Analyzer (ST-0001-066-101A)', layout)
 
-win2_active = False
 while True:
-    event1, values1 = win1.read(timeout=100)
-    win1['-OUTPUT-'].update(values1[0])
-    if event1 == sg.WIN_CLOSED or event1 == 'Exit':
-        break
-    elif event1 == 'Analyze Guinness Voltage Ramp':
-        break
-    elif event1 == 'Analyze Guinness Pulse Burst':
+    event, value = win1.read(timeout=100)
+    if event == sg.WIN_CLOSED or event == 'Exit':
         break
 
-    if not win2_active and event1 == 'Launch 2':
-        win2_active = True
-        layout2 = [[sg.Text('Window 2')],
-                   [sg.Button('Exit')]]
+    if event == 'Analyze Guinness Voltage Ramp':
+        if value['-FILE-'] != '' and value["-VOLT-"] != '':
+            
+            fileGood = CheckFile(value['-FILE-'])
+            voltageGood = VoltageCheck(value['-VOLT-'])
 
-        win2 = sg.Window('Window 2', layout2)
+            if fileGood == True and voltageGood == True:
 
-    if win2_active:
-        event2, values2 = win2.read(timeout=100)
-        if event2 == sg.WIN_CLOSED or event2 == 'Exit':
-            win2_active  = False
-            win2.close()
+                guinnessRampFilter(value['-FILE-'], value["-VOLT-"])
+
+            elif fileGood == False and voltageGood == True:
+                value['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
+                win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+            elif fileGood == True and voltageGood == False:
+                value['-OUTPUT-'] = "Not a valid input. Value must be an integer in the range from 0 to 150."
+                win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+            elif fileGood == False and voltageGood == False:
+                value['-OUTPUT-'] = "Invalid file and voltage limit."
+                win1['-OUTPUT-'].update(value['-OUTPUT-'])
+        
+
+        elif value['-FILE-'] == '' or value["-VOLT-"] == '':
+            value['-OUTPUT-'] = "Both the filepath and voltage limit must be entered."
+            win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+    if event == 'Analyze Guinness Pulse Burst':
+        if value['-FILE-'] != '' and value["-VOLT-"] != '':
+            
+            fileGood = CheckFile(value['-FILE-'])
+            voltageGood = VoltageCheck(value['-VOLT-'])
+
+            if fileGood == True and voltageGood == True:
+                guinnessTHD(value['-FILE-'], value["-VOLT-"])
+
+            elif fileGood == False and voltageGood == True:
+                value['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
+                win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+            elif fileGood == True and voltageGood == False:
+                value['-OUTPUT-'] = "Not a valid input. Value must be an integer in the range from 0 to 150."
+                win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+            elif fileGood == False and voltageGood == False:
+                value['-OUTPUT-'] = "Invalid file and voltage limit."
+                win1['-OUTPUT-'].update(value['-OUTPUT-'])
+        
+
+        elif value['-FILE-'] == '' or value["-VOLT-"] == '':
+            value['-OUTPUT-'] = "Both the filepath and voltage limit must be entered."
+            win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
 
 '''To create your EXE file from your program that uses PySimpleGUI, my_program.py, enter this command in your Windows command prompt:
