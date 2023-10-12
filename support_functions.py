@@ -22,7 +22,12 @@ def CheckFile(filepath):
 
 
 def VoltageCheck(voltageLimit):
-    voltageLimit = int(voltageLimit)
+    try:
+        voltageLimit = int(voltageLimit)
+
+    except ValueError:
+        status = False
+    
     if type(voltageLimit) == float:
         voltageLimit = int(voltageLimit)
 
@@ -192,7 +197,7 @@ def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     plt.ylabel(headers[1])
 
     # finding the peaks of the fft of y; this function gives the indices of the values
-    y_peaks_xvalues, ypeak_properties = signal.find_peaks(yf_plottable, height=0.10,prominence=0.10,distance=50)
+    y_peaks_xvalues, ypeak_properties = signal.find_peaks(yf_plottable, height=0.10,prominence=0.2,distance=10)
 
     # getting the y values of the peaks (these are the amplitudes (V) of the harmonics)
     y_peaks_yvalues = ypeak_properties["peak_heights"]

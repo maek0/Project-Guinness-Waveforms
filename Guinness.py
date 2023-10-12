@@ -16,7 +16,7 @@ layout = [[sg.Text('Enter a waveform file to evaluate.')],
           [sg.Text('File:', size=(3, 1)), sg.Input(do_not_clear=True, key="-FILE-"), sg.FileBrowse()],
           [sg.Text('Enter the voltage limit of the waveform.')],
           [sg.Text('Voltage Limit:', size=(11, 1)), sg.Input(key="-VOLT-", do_not_clear=True)],
-          [sg.Text(size=(25, 3), key='-OUTPUT-')],
+          [sg.Text(size=(50, 3), key='-OUTPUT-')],
           [sg.Button('Analyze Guinness Voltage Ramp'), sg.Button('Analyze Guinness Pulse Burst'), sg.Button('Exit')]]
 
 win1 = sg.Window('Guinness Waveform Analyzer (ST-0001-066-101A)', layout)
