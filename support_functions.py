@@ -161,17 +161,17 @@ def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
         ind = max(max(n),max(m))
         x = x[:ind-1]
         y = y[:ind-1]
-        # if there are NaN values anywhere in x or y, cut both of them down before the earliest found NaN
+        # if there are NaN values anywhere in x or y, cut both of them down right before the earliest found NaN
     elif n!=[] and m==[]:
         ind = max(n)
         x = x[:ind-1]
         y = y[:ind-1]
-        # if there are NaN values anywhere in x, cut both x and y down before the earliest found NaN in x
+        # if there are NaN values anywhere in x, cut both x and y down right before the earliest found NaN in x
     elif n==[] and m!=[]:
         ind = max(m)
         x = x[:ind-1]
         y = y[:ind-1]
-        # if there are NaN values anywhere in y, cut both x and y down before the earliest found NaN in y
+        # if there are NaN values anywhere in y, cut both x and y down right before the earliest found NaN in y
     
     # time step of x
     step = x[1]-x[0]
@@ -195,29 +195,44 @@ def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     # padding the frequency array; adding a step before the first value and a step after the last
     xf = np.concatenate(([min(xf)-step],xf,[max(xf)+step]))
 
-    # plotting the fft
-    plt.plot(xf, yf_plottable, label = "FFT of the Pulse Burst")
-    plt.text(min(x)+1,max(y)-3,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
-    plt.xlabel("Frequency (mHz)")
-    plt.ylabel(headers[1])
-
     # finding the peaks of the fft of y; this function gives the indices of the values
-    y_peaks_xvalues, ypeak_properties = signal.find_peaks(yf_plottable, height=0.10,prominence=0.2,distance=10)
+    y_peaks_xvalues, ypeak_properties = signal.find_peaks(yf_plottable, height=0.10,prominence=0.15,distance=10)
 
     # getting the y values of the peaks (these are the amplitudes (V) of the harmonics)
     y_peaks_yvalues = ypeak_properties["peak_heights"]
-
-    # mark the peaks on the plot
-    plt.plot(y_peaks_xvalues,y_peaks_yvalues,"x", color='red', label = "Harmonic Amplitudes", markersize = 4, markeredgewidth = 1)
+    actual_peak_xvalues = xf[y_peaks_xvalues[:]]
 
     # calculating the total harmonic distortion of the signal with its harmonic amplitudes
     thd = 100*(np.sum(y_peaks_yvalues)-max(y_peaks_yvalues))**0.5 / max(y_peaks_yvalues)
 
+    # initializing figure
+    fig = plt.figure()
+    ax1 = fig.add_subplot(211)
+    ax2 = fig.add_subplot(212)
+
+    # plotting the real-time data
+    ax1.plot(x,y)
+    ax1.text(min(x)+1,max(y)-3,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
+    ax1.set_title("Guinness Waveform: Time Domain")
+    ax1.set_xlabel(headers[0])
+    ax1.set_ylabel(headers[1])
+    ax1.set_xlim(min(x),max(x))
+    ax1.set_ylim(min(y)-3,max(y)+3)
+
+    # plotting the fft
+    ax2.plot(xf, yf_plottable, label = "FFT of the Pulse Burst")
+    ax2.set_title("Guinness Waveform: Frequency Domain")
+    ax2.set_xlabel("Frequency (bins)")
+    ax2.set_ylabel("Amplitude")
+    ax2.set_xlim(min(xf),actual_peak_xvalues[-1]+200)
+    ax2.set_ylim(min(yf_plottable)-3,max(yf_plottable)+3)
+
+    # mark the peaks on the plot
+    ax2.plot(actual_peak_xvalues,y_peaks_yvalues,"x", color='red', label = "Harmonic Amplitudes", markersize = 4, markeredgewidth = 1)
+    ax2.legend(loc="upper right")
+
     # plotting options
-    plt.title("Guinness Generator Pulse Burst FFT, THD = {:.3f}%\nVoltage Limit = {}V, Input file name: '{}'".format(thd,voltageLimit, filename))
-    plt.xlim(min(xf),10000)
-    plt.ylim(min(yf_plottable)-3,max(yf_plottable)+3)
-    plt.legend(loc="upper right")
+    plt.suptitle("Guinness Generator Pulse Burst FFT, THD = {:.3f}%\nVoltage Limit = {}V, Input file name: '{}'".format(thd,voltageLimit, filename))
 
     # display the plot
     plt.show()
