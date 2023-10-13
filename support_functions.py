@@ -115,7 +115,7 @@ def plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     plt.scatter(twoVoltRampX,twoVoltRampY, color = 'orange')
 
     # plotting the 66%(voltage limit)
-    plt.axhline(cutoff, label = "{:.2f}V".format(cutoff), linestyle = "--", color = "black")
+    plt.axhline(cutoff, label = "{:.1f}V".format(cutoff), linestyle = "--", color = "black")
     
     # plotting options
     plt.title("Guinness Generator Output, Voltage Limit = {}V\nInput file name: '{}'".format(voltageLimit, filename))
