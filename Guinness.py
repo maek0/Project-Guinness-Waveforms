@@ -32,6 +32,8 @@ while True:
             fileGood = CheckFile(value['-FILE-'])
             voltageGood = VoltageCheck(value['-VOLT-'])
 
+            # reconfigure to include check for basic csv contents
+
             if fileGood == True and voltageGood == True:
 
                 guinnessRampFilter(value['-FILE-'], value["-VOLT-"])

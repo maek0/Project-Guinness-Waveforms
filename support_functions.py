@@ -1,4 +1,3 @@
-import sys
 import os
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -7,17 +6,38 @@ from scipy.fftpack import fft
 from scipy.fftpack import fftfreq
 import matplotlib.pyplot as plt
 
+def CheckCSV(filepath):
+    csvArray = np.genfromtxt(open(filepath), delimiter=",")
+    rows = np.size(csvArray,0)
+    columns = np.size(csvArray,1)
+
+    if rows > 2 or rows < 2:
+        status = False
+
+    else:
+        if columns < 500:
+            status = False
+            
+        else:
+            status = True
+
+    return status
+
 def CheckFile(filepath):
     if os.path.exists(filepath):
+
         if filepath[-1] == "/":
             filepath = filepath[:-1]
+
         elif filepath[-4:] == ".csv":
             status = True
-            # return os.path.basename(filepath)
+
         else:
             status = False
+
     else:
         status = False
+
     return status
 
 
@@ -29,16 +49,19 @@ def VoltageCheck(voltageLimit):
         status = False
     
     if type(voltageLimit) == float:
+
         voltageLimit = int(voltageLimit)
 
         if voltageLimit > 150 or voltageLimit < 0:
             status = False
+
         elif voltageLimit <= 150 and voltageLimit >= 0:
             status = True
         
     elif type(voltageLimit) == int:
         if voltageLimit > 150 or voltageLimit < 0:
             status = False
+
         elif voltageLimit <= 150 and voltageLimit >= 0:
             status = True
 
