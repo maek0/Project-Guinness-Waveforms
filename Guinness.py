@@ -2,15 +2,8 @@ import PySimpleGUI as sg
 from guinnessRampFilter import guinnessRampFilter
 from guinnessTHD import guinnessTHD
 from support_functions import CheckFile, VoltageCheck
-import sys
-import os
 
 sg.theme('DefaultNoMoreNagging')
-
-# layout = [[sg.Text('Select a file:')],
-#           [sg.Input(key='-FILE-', visible=False, enable_events=True), sg.FileBrowse()]]
-
-# event, values = sg.Window('File Compare', layout).read(close=True)
 
 layout = [[sg.Text('Enter a waveform file to evaluate.')],
           [sg.Text('File:', size=(3, 1)), sg.Input(do_not_clear=True, key="-FILE-"), sg.FileBrowse()],
