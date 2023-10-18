@@ -7,6 +7,23 @@ from scipy.fftpack import fft
 from scipy.fftpack import fftfreq
 import matplotlib.pyplot as plt
 
+def CheckCSV(filepath):
+    csvArray = np.genfromtxt(open(filepath), delimiter=",")
+    rows = np.size(csvArray,0)
+    columns = np.size(csvArray,1)
+
+    if rows > 2 or rows < 2:
+        status = False
+
+    else:
+        if columns < 500:
+            status = False
+            
+        else:
+            status = True
+
+    return status
+
 def CheckFile(filepath):
     if os.path.exists(filepath):
         if filepath[-1] == "/":

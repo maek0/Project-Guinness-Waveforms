@@ -1,14 +1,9 @@
 import PySimpleGUI as sg
-from guinnessRampFilter import guinnessRampFilter
-from guinnessTHD import guinnessTHD
-from support_functions import CheckFile, VoltageCheck
+import guinnessRampFilter
+import guinnessTHD
+from support_functions import CheckFile, VoltageCheck, CheckCSV
 
 sg.theme('DefaultNoMoreNagging')
-
-# layout = [[sg.Text('Select a file:')],
-#           [sg.Input(key='-FILE-', visible=False, enable_events=True), sg.FileBrowse()]]
-
-# event, values = sg.Window('File Compare', layout).read(close=True)
 
 layout = [[sg.Text('Enter a waveform file to evaluate.')],
           [sg.Text('File:', size=(3, 1)), sg.Input(do_not_clear=True, key="-FILE-"), sg.FileBrowse()],
@@ -29,6 +24,8 @@ while True:
             
             fileGood = CheckFile(value['-FILE-'])
             voltageGood = VoltageCheck(value['-VOLT-'])
+
+            # reconfigure to include check for basic csv contents
 
             if fileGood == True and voltageGood == True:
 
@@ -80,7 +77,7 @@ while True:
 
 '''To create your EXE file from your program that uses PySimpleGUI, my_program.py, enter this command in your Windows command prompt:
 
-pyinstaller -wF my_program.py
+pyinstaller my_program.py
 
 You will be left with a single file, my_program.exe, located in a folder named dist under the folder where you executed the pyinstaller command.
 '''
