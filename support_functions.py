@@ -82,17 +82,17 @@ def plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     first_peakX = x[y_peaks_xvalues[0]]
     first_peakY = y_peaks_yvalues[0]
     
-    # find the cutoff voltage = 66% of the voltage limit
+    # find the cutoff voltage = 66% of the input voltage limit
     cutoff = 0.66*float(voltageLimit)
 
     # index the cutoff voltage
     ind = np.where(y_peaks_yvalues>=cutoff)[0][0]
     
-    # get all peaks BEFORE the indexed cutoff value - this should be when the generator is ramping at 5V/s
+    # get all peaks BEFORE the indexed cutoff value - this is when the generator should be ramping at 5V/s
     fiveVoltRampY = y_peaks_yvalues[:ind]
     fiveVoltRampX = x[y_peaks_xvalues[:ind]]
     
-    # get all peaks AFTER the indexed cutoff value - this should be when the generator is ramping at 2V/s
+    # get all peaks AFTER the indexed cutoff value - this is when the generator should be ramping at 2V/s
     twoVoltRampY = y_peaks_yvalues[ind:]
     twoVoltRampX = x[y_peaks_xvalues[ind:]]
     
