@@ -1,10 +1,13 @@
 import PySimpleGUI as sg
+import base64
+import io
 import os
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from scipy import signal
 from scipy.fftpack import fft
 from scipy.fftpack import fftfreq
+from PIL import Image
 import matplotlib.pyplot as plt
 
 def CheckCSV(filepath):
@@ -281,100 +284,129 @@ def guinnessTHD(filepath,voltageLimit):
     
     THD(x, y, voltageLimit, filepath, str_datetime_rn, headers)
 
+help_button_base64 = b'iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABq0lEQVRIie1VPS8EURTdIJEIEvOxGyRCUPADJFtIBIVEva1CQ6NQCLHz3lMqdKJQoNNJJKKhoNDRiUjQqXwEEcy6b5LnDEE28+Zjl46b3GrmnnPvuWfupFJ/IswpVWdzL2dxuWRx2rQZbdtcrqQZjZtCNZUN3ChUjcWI25weAaj0SZ7F5Koxq5pL6xqd2UwehgMXJya7NYXsSwReL5SBorOk4F8kjFxDUE8sATTeiuj0GpKchxIxurSFqg0FTzM5ENVlRritKaGqsPCLcBI5F0qAMTeiZZDDmbzbhvduIqS6QhMVAfCOCVUNCZ5K1V6XsHA2qH3ebY8sZLSOCeYhz0Hswp3XUY3+lI0pPIK+C77GsVMwmgkQGE6hK0HhXhICk9NYgODjJJD3GwS2kENaF+Hh/k8J4KJn/8zobYrlxO7A8UYAshtKwOWaFvw9cqoSICchxcuQcPo7deD00iBUSziBv2xR6AbAQzn+19pTF7iM/SC5Sw6Os81pMhH4Z1hOoRNFO/HWladpIQdLAi8iYtSLxS3iKz6Gi+59nW3/nOPL9v90/vErG/w/3gALBuad4TTYiQAAAABJRU5ErkJggg=='
 
-    
+# make it pretty:
+# sg.theme_previewer()
+sg.theme('LightGrey1')
 
-sg.theme('DefaultNoMoreNagging')
-
-layout = [[sg.Text('Enter a waveform file to evaluate.')],
-          [sg.Text('File:', size=(3, 1)), sg.Input(do_not_clear=True, key="-FILE-"), sg.FileBrowse()],
-          [sg.Text('Enter the voltage limit of the waveform.')],
-          [sg.Text('Voltage Limit:', size=(11, 1)), sg.Input(key="-VOLT-", do_not_clear=True)],
+layout_win1 = [[sg.Text('Enter a waveform file and its voltage limit to evaluate.')],
+          [sg.Text('File:'), sg.Push(), sg.Input(key="-FILE-", do_not_clear=True, size=(50,3)), sg.FileBrowse()],
+          [sg.Text('Voltage Limit:'), sg.Push(), sg.Input(key="-VOLT-", do_not_clear=True, size=(50,3))],
           [sg.Text(size=(50, 3), key='-OUTPUT-')],
-          [sg.Button('Analyze Guinness Voltage Ramp'), sg.Button('Analyze Guinness Pulse Burst'), sg.Button('Exit')]]
+          [sg.Button('Analyze Voltage Ramp'), sg.Button('Analyze Pulse Burst'), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-INFO-'), sg.Button('Exit', button_color='red')]]
 
-win1 = sg.Window('Guinness Waveform Analyzer (ST-0001-066-101A)', layout)
+win1 = sg.Window(title='Guinness Waveform Analyzer (ST-0001-066-101A)', layout=layout_win1)
+win2_active = False
+
+info_txt_width = 85
 
 while True:
-    event, value = win1.read(timeout=100)
-    if event == sg.WIN_CLOSED or event == 'Exit':
-        break
+    try:
+        event, value = win1.read(timeout=100)
+        
+        if event == sg.WIN_CLOSED or event == 'Exit':
+            break
 
-    if event == 'Analyze Guinness Voltage Ramp':
-        if value['-FILE-'] != '' and value["-VOLT-"] != '':
+        if event == '-INFO-' and win2_active == False:
+            win2_active = True
+            layout_win2 = [[sg.Text('Instructions For Use', font=('None',12,'bold'))],
+                           [sg.Text("Capture the treatment output from the Guinness Generator on an oscilloscope and export the data from the oscilloscope screen as a .csv file. In this application, enter the filepath of the exported .csv file and the voltage limit set during the Guinness Generator treatment output.\n\nThere are several restrictions on the input .csv file to prevent errors and inaccuracies:",size=(info_txt_width, None))],
+                           [sg.Text("1.  It must have only 2 columns: the first for timestamps, the second for voltage.\n2.  It must have at least 500 rows of data.\n3.  Its headers (if applicable) must be contained to the first row.",pad=(40,0), size=(info_txt_width,None))],
+                           [sg.Text('\nAnalyze Voltage Ramp', font=('None',10,'underline'))],
+                           [sg.Text('For this function to work properly, the input .csv file should capture the voltage ramp of the Guinness Generator from 0V to the set Voltage Limit. The waveform should resemble the following image:')],
+                           [sg.Text('\nAnalyze Pulse Burst', font=('None',10,'underline'))],
+                           [sg.Button('Close')]]
+
+            win2 = sg.Window(title='ST-0001-066-101A Information', layout=layout_win2, size=(700,500))
+
+        if win2_active == True:
+            win2_events, win2_values = win2.read(timeout=100)
+            if win2_events == sg.WIN_CLOSED or win2_events == 'Close':
+                win2_active  = False
+                win2.close()
+
+        if event == 'Analyze Voltage Ramp':
+
+            if value['-FILE-'] != '' and value["-VOLT-"] != '':
+                
+                fileGood = CheckFile(value['-FILE-'])
+                voltageGood = VoltageCheck(value['-VOLT-'])
+
+                if fileGood == True and voltageGood == True:
+                    csvGood = CheckCSV(value['-FILE-'])
+
+                    if csvGood == True:
+                        guinnessRampFilter(value['-FILE-'], value["-VOLT-"])
+                    else:
+                        value['-OUTPUT-'] = "Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+                elif fileGood == False and voltageGood == True:
+                    value['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
+                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+                elif fileGood == True and voltageGood == False:
+                    csvGood = CheckCSV(value['-FILE-'])
+
+                    if csvGood == True:
+                        value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
+                        win1['-OUTPUT-'].update(value['-OUTPUT-'])
+                    else:
+                        value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nInput file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+                elif fileGood == False and voltageGood == False:
+                    value['-OUTPUT-'] = "Invalid file and voltage limit."
+                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
             
-            fileGood = CheckFile(value['-FILE-'])
-            voltageGood = VoltageCheck(value['-VOLT-'])
 
-            if fileGood == True and voltageGood == True:
-                csvGood = CheckCSV(value['-FILE-'])
-
-                if csvGood == True:
-                    guinnessRampFilter(value['-FILE-'], value["-VOLT-"])
-                else:
-                    value['-OUTPUT-'] = "Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
-                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
-
-            elif fileGood == False and voltageGood == True:
-                value['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
+            elif value['-FILE-'] == '' or value["-VOLT-"] == '':
+                value['-OUTPUT-'] = "Both the filepath and voltage limit must be entered."
                 win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
-            elif fileGood == True and voltageGood == False:
-                csvGood = CheckCSV(value['-FILE-'])
 
-                if csvGood == True:
-                    value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
-                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
-                else:
-                    value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nInput file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+        if event == 'Analyze Pulse Burst':
+            if value['-FILE-'] != '' and value["-VOLT-"] != '':
+                
+                fileGood = CheckFile(value['-FILE-'])
+                voltageGood = VoltageCheck(value['-VOLT-'])
+
+                if fileGood == True and voltageGood == True:
+                    csvGood = CheckCSV(value['-FILE-'])
+
+                    if csvGood == True:
+                        guinnessTHD(value['-FILE-'], value["-VOLT-"])
+                    else:
+                        value['-OUTPUT-'] = "Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+                elif fileGood == False and voltageGood == True:
+                    value['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
                     win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
-            elif fileGood == False and voltageGood == False:
-                value['-OUTPUT-'] = "Invalid file and voltage limit."
+                elif fileGood == True and voltageGood == False:
+                    csvGood = CheckCSV(value['-FILE-'])
+
+                    if csvGood == True:
+                        value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
+                        win1['-OUTPUT-'].update(value['-OUTPUT-'])
+                    else:
+                        value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nInput file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+                elif fileGood == False and voltageGood == False:
+                    value['-OUTPUT-'] = "Invalid file and voltage limit."
+                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
+            
+            elif value['-FILE-'] == '' or value["-VOLT-"] == '':
+                value['-OUTPUT-'] = "Both the filepath and voltage limit must be entered."
                 win1['-OUTPUT-'].update(value['-OUTPUT-'])
+    
+    except ValueError:
+        value['-OUTPUT-'] = "Something went wrong. Review contents of the input waveform .csv with the selected analysis option."
         
 
-        elif value['-FILE-'] == '' or value["-VOLT-"] == '':
-            value['-OUTPUT-'] = "Both the filepath and voltage limit must be entered."
-            win1['-OUTPUT-'].update(value['-OUTPUT-'])
-
-
-    if event == 'Analyze Guinness Pulse Burst':
-        if value['-FILE-'] != '' and value["-VOLT-"] != '':
-            
-            fileGood = CheckFile(value['-FILE-'])
-            voltageGood = VoltageCheck(value['-VOLT-'])
-
-            if fileGood == True and voltageGood == True:
-                csvGood = CheckCSV(value['-FILE-'])
-
-                if csvGood == True:
-                    guinnessTHD(value['-FILE-'], value["-VOLT-"])
-                else:
-                    value['-OUTPUT-'] = "Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
-                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
-
-            elif fileGood == False and voltageGood == True:
-                value['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
-                win1['-OUTPUT-'].update(value['-OUTPUT-'])
-
-            elif fileGood == True and voltageGood == False:
-                csvGood = CheckCSV(value['-FILE-'])
-
-                if csvGood == True:
-                    value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
-                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
-                else:
-                    value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nInput file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
-                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
-
-            elif fileGood == False and voltageGood == False:
-                value['-OUTPUT-'] = "Invalid file and voltage limit."
-                win1['-OUTPUT-'].update(value['-OUTPUT-'])
-        
-        elif value['-FILE-'] == '' or value["-VOLT-"] == '':
-            value['-OUTPUT-'] = "Both the filepath and voltage limit must be entered."
-            win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
 
 '''To create your EXE file from your program that uses PySimpleGUI, my_program.py, enter this command in your Windows command prompt:
