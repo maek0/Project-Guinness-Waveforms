@@ -306,19 +306,28 @@ while True:
             fileGood = CheckFile(value['-FILE-'])
             voltageGood = VoltageCheck(value['-VOLT-'])
 
-            # reconfigure to include check for basic csv contents
-
             if fileGood == True and voltageGood == True:
+                csvGood = CheckCSV(value['-FILE-'])
 
-                guinnessRampFilter(value['-FILE-'], value["-VOLT-"])
+                if csvGood == True:
+                    guinnessRampFilter(value['-FILE-'], value["-VOLT-"])
+                else:
+                    value['-OUTPUT-'] = "Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
             elif fileGood == False and voltageGood == True:
                 value['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
                 win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
             elif fileGood == True and voltageGood == False:
-                value['-OUTPUT-'] = "Not a valid input. Value must be an integer in the range from 0 to 150."
-                win1['-OUTPUT-'].update(value['-OUTPUT-'])
+                csvGood = CheckCSV(value['-FILE-'])
+
+                if csvGood == True:
+                    value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
+                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
+                else:
+                    value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nInput file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
             elif fileGood == False and voltageGood == False:
                 value['-OUTPUT-'] = "Invalid file and voltage limit."
@@ -329,6 +338,7 @@ while True:
             value['-OUTPUT-'] = "Both the filepath and voltage limit must be entered."
             win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
+
     if event == 'Analyze Guinness Pulse Burst':
         if value['-FILE-'] != '' and value["-VOLT-"] != '':
             
@@ -336,21 +346,32 @@ while True:
             voltageGood = VoltageCheck(value['-VOLT-'])
 
             if fileGood == True and voltageGood == True:
-                guinnessTHD(value['-FILE-'], value["-VOLT-"])
+                csvGood = CheckCSV(value['-FILE-'])
+
+                if csvGood == True:
+                    guinnessTHD(value['-FILE-'], value["-VOLT-"])
+                else:
+                    value['-OUTPUT-'] = "Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
             elif fileGood == False and voltageGood == True:
                 value['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
                 win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
             elif fileGood == True and voltageGood == False:
-                value['-OUTPUT-'] = "Not a valid input. Value must be an integer in the range from 0 to 150."
-                win1['-OUTPUT-'].update(value['-OUTPUT-'])
+                csvGood = CheckCSV(value['-FILE-'])
+
+                if csvGood == True:
+                    value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
+                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
+                else:
+                    value['-OUTPUT-'] = "Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nInput file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                    win1['-OUTPUT-'].update(value['-OUTPUT-'])
 
             elif fileGood == False and voltageGood == False:
                 value['-OUTPUT-'] = "Invalid file and voltage limit."
                 win1['-OUTPUT-'].update(value['-OUTPUT-'])
         
-
         elif value['-FILE-'] == '' or value["-VOLT-"] == '':
             value['-OUTPUT-'] = "Both the filepath and voltage limit must be entered."
             win1['-OUTPUT-'].update(value['-OUTPUT-'])
