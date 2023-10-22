@@ -12,11 +12,11 @@ def CheckCSV(filepath):
     rows = np.size(csvArray,0)
     columns = np.size(csvArray,1)
 
-    if rows > 2 or rows < 2:
+    if columns > 2 or columns < 2:
         status = False
 
     else:
-        if columns < 500:
+        if rows < 500:
             status = False
             
         else:
