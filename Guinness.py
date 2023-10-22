@@ -1,8 +1,6 @@
 import PySimpleGUI as sg
 import os
 import numpy as np
-import latexify
-import math
 from sklearn.linear_model import LinearRegression
 from scipy import signal
 from scipy.fftpack import fft
