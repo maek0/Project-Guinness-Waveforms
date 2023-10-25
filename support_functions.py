@@ -109,15 +109,18 @@ def plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     cutoff = 0.66*float(voltageLimit)
 
     # index the cutoff voltage
-    ind = np.where(y_peaks_yvalues>=cutoff)[0][0]
+    ind_cutoff = np.where(y_peaks_yvalues>=cutoff)[0][0]
+
+    # index the first point where the voltage reaches the set limit
+    ind_limit = np.argmax(y_peaks_yvalues>=float(voltageLimit))
     
     # get all peaks BEFORE the indexed cutoff value - this is when the generator should be ramping at 5V/s
-    fiveVoltRampY = y_peaks_yvalues[:ind]
-    fiveVoltRampX = x[y_peaks_xvalues[:ind]]
+    fiveVoltRampY = y_peaks_yvalues[:ind_cutoff]
+    fiveVoltRampX = x[y_peaks_xvalues[:ind_cutoff]]
     
-    # get all peaks AFTER the indexed cutoff value - this is when the generator should be ramping at 2V/s
-    twoVoltRampY = y_peaks_yvalues[ind:]
-    twoVoltRampX = x[y_peaks_xvalues[ind:]]
+    # get all peaks AFTER the indexed cutoff value and UNTIL the peaks reach the voltage limit - this is when the generator should be ramping at 2V/s
+    twoVoltRampY = y_peaks_yvalues[ind_cutoff:ind_limit]
+    twoVoltRampX = x[y_peaks_xvalues[ind_cutoff:ind_limit]]
     
     # find the line of best fit for the ramping section BEFORE reaching 66%(voltage limit)
     fiveV_rsq, fiveV_slope, fiveV_intercept, fiveV_fit = linearRegression(fiveVoltRampX, fiveVoltRampY)
