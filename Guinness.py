@@ -101,7 +101,6 @@ def plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers):
 
     # get the y-values of the output energy peaks
     y_peaks_yvalues = ypeak_properties["peak_heights"]
-    print(y_peaks_yvalues)
     
     # find the first peak of the output energy signal (not including voltage checks)
     first_peakX = x[y_peaks_xvalues[0]]
