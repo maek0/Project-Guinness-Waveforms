@@ -1,5 +1,6 @@
 import numpy as np
 import csv
+import matplotlib.pyplot as plt
 
 ### Examples for Pulse Burst Analyzing ###
 
@@ -27,9 +28,11 @@ cycles_noise = 500
 # noise
 length_noise = np.pi * 2 * cycles_noise
 
-noise_wave = 5*np.sin(np.arange(0, length_noise, length_noise / resolution))
+noise_wave = np.sin(np.arange(0, length_noise, length_noise / resolution))
 
 sin_with_noise = sin_wave + noise_wave
+plt.plot(sin_with_noise)
+plt.show()
 
 with open('sin_with_noise_file.csv', newline='', mode='w') as f:
   writer = csv.writer(f)
