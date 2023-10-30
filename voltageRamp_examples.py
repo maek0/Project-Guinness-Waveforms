@@ -23,7 +23,7 @@ pulse_burst = pulse_burst[:-1]
 limit = 75
 
 # voltage ramp switch cutoff
-cutoff = limit*(2/3)
+cutoff = limit*0.66
 
 # datapoints per second
 dpps = int(pulse_burst_count/0.03)
@@ -32,7 +32,7 @@ dpps = int(pulse_burst_count/0.03)
 pr = dpps/2
 
 # make whole file X seconds
-sec = 15
+sec = 25
 
 # length of entire file:
 file_length = dpps * sec
@@ -43,9 +43,9 @@ x = np.zeros(file_length)
 # 3 seconds of nothing
 buf = int(2)
 
-pulse_amp = 5
-ramp1 = 5
-ramp2 = 2
+pulse_amp = 10
+ramp1 = 2.5
+ramp2 = 1
 
 i = int(buf*dpps)
 while i < file_length:
@@ -59,13 +59,13 @@ while i < file_length:
         x[i:j] = x[i:j] + pulse_amp*pulse_burst
         pulse_amp = pulse_amp + ramp2
     
-    elif pulse_amp>limit:
+    elif pulse_amp>=limit:
         x[i:j] = x[i:j] + limit*pulse_burst
 
     i = int(i + pr)
 
-# plt.plot(t,x)
-# plt.show()
+plt.plot(t,x)
+plt.show()
 
 with open('ramp_75V_normalrate.csv', newline='', mode='w') as f:
   writer = csv.writer(f)
@@ -80,7 +80,7 @@ with open('ramp_75V_normalrate.csv', newline='', mode='w') as f:
 limit = 120
 
 # voltage ramp switch cutoff
-cutoff = limit*(2/3)
+cutoff = limit*0.66
 
 # datapoints per second
 dpps = int(pulse_burst_count/0.03)
@@ -89,7 +89,7 @@ dpps = int(pulse_burst_count/0.03)
 pr = dpps/2
 
 # make whole file X seconds
-sec = 20
+sec = 40
 
 # length of entire file:
 file_length = dpps * sec
@@ -100,7 +100,121 @@ x = np.zeros(file_length)
 # 3 seconds of nothing
 buf = int(2)
 
-pulse_amp = 5
+pulse_amp = 10
+ramp1 = 2.5
+ramp2 = 1
+
+i = int(buf*dpps)
+while i < file_length:
+    j = int(i+pulse_burst_count)
+
+    if pulse_amp<=cutoff:
+        x[i:j] = x[i:j] + pulse_amp*pulse_burst
+        pulse_amp = pulse_amp + ramp1
+
+    elif pulse_amp>cutoff and pulse_amp<=limit:
+        x[i:j] = x[i:j] + pulse_amp*pulse_burst
+        pulse_amp = pulse_amp + ramp2
+    
+    elif pulse_amp>=limit:
+        x[i:j] = x[i:j] + limit*pulse_burst
+
+    i = int(i + pr)
+
+plt.plot(t,x)
+plt.show()
+
+with open('ramp_120V_normalrate.csv', newline='', mode='w') as f:
+  writer = csv.writer(f)
+  writer.writerow([headers[0], headers[1]])
+
+  for i in range(0,np.shape(x)[0]):
+    writer.writerow([t[i],x[i]])
+
+
+
+## 75V voltage limit ## ramping 2v/s first, then ramping 1V/s ##
+limit = 75
+
+# voltage ramp switch cutoff
+cutoff = limit*0.66
+
+# datapoints per second
+dpps = int(pulse_burst_count/0.03)
+
+# pulse rate = every 1/2 dpps
+pr = dpps/2
+
+# make whole file X seconds
+sec = 55
+
+# length of entire file:
+file_length = dpps * sec
+
+t = np.linspace(0,sec,file_length)
+x = np.zeros(file_length)
+
+# 3 seconds of nothing
+buf = int(2)
+
+pulse_amp = 10
+ramp1 = 1
+ramp2 = 0.5
+
+i = int(buf*dpps)
+while i < file_length:
+    j = int(i+pulse_burst_count)
+
+    if pulse_amp<=cutoff:
+        x[i:j] = x[i:j] + pulse_amp*pulse_burst
+        pulse_amp = pulse_amp + ramp1
+
+    elif pulse_amp>cutoff and pulse_amp<=limit:
+        x[i:j] = x[i:j] + pulse_amp*pulse_burst
+        pulse_amp = pulse_amp + ramp2
+    
+    elif pulse_amp>=limit:
+        x[i:j] = x[i:j] + limit*pulse_burst
+
+    i = int(i + pr)
+
+plt.plot(t,x)
+plt.show()
+
+with open('ramp_75V_halfrate.csv', newline='', mode='w') as f:
+  writer = csv.writer(f)
+  writer.writerow([headers[0], headers[1]])
+
+  for i in range(0,np.shape(x)[0]):
+    writer.writerow([t[i],x[i]])
+
+
+
+## 120V voltage limit ## ramping 2v/s first, then ramping 1V/s ##
+limit = 120
+
+# voltage ramp switch cutoff
+cutoff = limit*0.66
+
+# datapoints per second
+dpps = int(pulse_burst_count/0.03)
+
+# pulse rate = every 1/2 dpps
+pr = dpps/2
+
+# make whole file X seconds
+sec = 25
+
+# length of entire file:
+file_length = dpps * sec
+
+t = np.linspace(0,sec,file_length)
+x = np.zeros(file_length)
+
+# 3 seconds of nothing
+buf = int(2)
+
+pulse_amp = 10
 ramp1 = 5
 ramp2 = 2
 
@@ -116,129 +230,15 @@ while i < file_length:
         x[i:j] = x[i:j] + pulse_amp*pulse_burst
         pulse_amp = pulse_amp + ramp2
     
-    elif pulse_amp>limit:
+    elif pulse_amp>=limit:
         x[i:j] = x[i:j] + limit*pulse_burst
 
     i = int(i + pr)
 
-# plt.plot(t,x)
-# plt.show()
+plt.plot(t,x)
+plt.show()
 
-with open('ramp_120V_normalrate.csv', newline='', mode='w') as f:
-  writer = csv.writer(f)
-  writer.writerow([headers[0], headers[1]])
-
-  for i in range(0,np.shape(x)[0]):
-    writer.writerow([t[i],x[i]])
-
-
-
-## 75V voltage limit ## ramping 2v/s first, then ramping 1V/s ##
-limit = 75
-
-# voltage ramp switch cutoff
-cutoff = limit*(2/3)
-
-# datapoints per second
-dpps = int(pulse_burst_count/0.03)
-
-# pulse rate = every 1/2 dpps
-pr = dpps/2
-
-# make whole file X seconds
-sec = 30
-
-# length of entire file:
-file_length = dpps * sec
-
-t = np.linspace(0,sec,file_length)
-x = np.zeros(file_length)
-
-# 3 seconds of nothing
-buf = int(2)
-
-pulse_amp = 2
-ramp1 = 2
-ramp2 = 1
-
-i = int(buf*dpps)
-while i < file_length:
-    j = int(i+pulse_burst_count)
-
-    if pulse_amp<=cutoff:
-        x[i:j] = x[i:j] + pulse_amp*pulse_burst
-        pulse_amp = pulse_amp + ramp1
-
-    elif pulse_amp>cutoff and pulse_amp<=limit:
-        x[i:j] = x[i:j] + pulse_amp*pulse_burst
-        pulse_amp = pulse_amp + ramp2
-    
-    elif pulse_amp>limit:
-        x[i:j] = x[i:j] + limit*pulse_burst
-
-    i = int(i + pr)
-
-# plt.plot(t,x)
-# plt.show()
-
-with open('ramp_75V_halfrate.csv', newline='', mode='w') as f:
-  writer = csv.writer(f)
-  writer.writerow([headers[0], headers[1]])
-
-  for i in range(0,np.shape(x)[0]):
-    writer.writerow([t[i],x[i]])
-
-
-
-## 120V voltage limit ## ramping 2v/s first, then ramping 1V/s ##
-limit = 120
-
-# voltage ramp switch cutoff
-cutoff = limit*(2/3)
-
-# datapoints per second
-dpps = int(pulse_burst_count/0.03)
-
-# pulse rate = every 1/2 dpps
-pr = dpps/2
-
-# make whole file X seconds
-sec = 45
-
-# length of entire file:
-file_length = dpps * sec
-
-t = np.linspace(0,sec,file_length)
-x = np.zeros(file_length)
-
-# 3 seconds of nothing
-buf = int(2)
-
-pulse_amp = 2
-ramp1 = 2
-ramp2 = 1
-
-i = int(buf*dpps)
-while i < file_length:
-    j = int(i+pulse_burst_count)
-
-    if pulse_amp<=cutoff:
-        x[i:j] = x[i:j] + pulse_amp*pulse_burst
-        pulse_amp = pulse_amp + ramp1
-
-    elif pulse_amp>cutoff and pulse_amp<=limit:
-        x[i:j] = x[i:j] + pulse_amp*pulse_burst
-        pulse_amp = pulse_amp + ramp2
-    
-    elif pulse_amp>limit:
-        x[i:j] = x[i:j] + limit*pulse_burst
-
-    i = int(i + pr)
-
-# plt.plot(t,x)
-# plt.show()
-
-with open('ramp_120V_halfrate.csv', newline='', mode='w') as f:
+with open('ramp_120V_doublerate.csv', newline='', mode='w') as f:
   writer = csv.writer(f)
   writer.writerow([headers[0], headers[1]])
 

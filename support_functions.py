@@ -115,8 +115,8 @@ def plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     ind_limit = np.argmax(y_peaks_yvalues>=float(voltageLimit))
     
     # get all peaks BEFORE the indexed cutoff value - this is when the generator should be ramping at 5V/s
-    fiveVoltRampY = y_peaks_yvalues[:ind_cutoff]
-    fiveVoltRampX = x[y_peaks_xvalues[:ind_cutoff]]
+    fiveVoltRampY = y_peaks_yvalues[:(ind_cutoff-1)]
+    fiveVoltRampX = x[y_peaks_xvalues[:(ind_cutoff-1)]]
     
     # get all peaks AFTER the indexed cutoff value and UNTIL the peaks reach the voltage limit - this is when the generator should be ramping at 2V/s
     twoVoltRampY = y_peaks_yvalues[ind_cutoff:ind_limit]
