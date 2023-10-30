@@ -354,7 +354,19 @@ while True:
                     csvGood = CheckCSV(value['-FILE-'])
 
                     if csvGood == True:
-                        guinnessRampFilter(value['-FILE-'], value["-VOLT-"])
+                        try:
+                            guinnessRampFilter(value['-FILE-'], value["-VOLT-"])
+                        except ValueError:
+                            value['-OUTPUT-'] = "Error:  Something went wrong. Review contents of the input waveform .csv with the selected analysis option."
+                            win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+                        except IndexError:
+                            value['-OUTPUT-'] = "Error:  Something went wrong. Review contents of the input waveform .csv with the selected analysis option."
+                            win1['-OUTPUT-'].update(value['-OUTPUT-'])
+                            
+                        except TypeError:
+                            value['-OUTPUT-'] = "Error:  Something went wrong. Review contents of the input waveform .csv with the selected analysis option."
+                            win1['-OUTPUT-'].update(value['-OUTPUT-'])
                     else:
                         value['-OUTPUT-'] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
                         win1['-OUTPUT-'].update(value['-OUTPUT-'])
@@ -393,7 +405,19 @@ while True:
                     csvGood = CheckCSV(value['-FILE-'])
 
                     if csvGood == True:
-                        guinnessTHD(value['-FILE-'], value["-VOLT-"])
+                        try:
+                            guinnessTHD(value['-FILE-'], value["-VOLT-"])
+                        except ValueError:
+                            value['-OUTPUT-'] = "Error:  Something went wrong. Review contents of the input waveform .csv with the selected analysis option."
+                            win1['-OUTPUT-'].update(value['-OUTPUT-'])
+
+                        except IndexError:
+                            value['-OUTPUT-'] = "Error:  Something went wrong. Review contents of the input waveform .csv with the selected analysis option."
+                            win1['-OUTPUT-'].update(value['-OUTPUT-'])
+                            
+                        except TypeError:
+                            value['-OUTPUT-'] = "Error:  Something went wrong. Review contents of the input waveform .csv with the selected analysis option."
+                            win1['-OUTPUT-'].update(value['-OUTPUT-'])
                     else:
                         value['-OUTPUT-'] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
                         win1['-OUTPUT-'].update(value['-OUTPUT-'])
@@ -422,7 +446,12 @@ while True:
     
     except ValueError:
         value['-OUTPUT-'] = "Error:  Something went wrong. Review contents of the input waveform .csv with the selected analysis option."
+
+    except IndexError:
+        value['-OUTPUT-'] = "Error:  Something went wrong. Review contents of the input waveform .csv with the selected analysis option."
         
+    except TypeError:
+        value['-OUTPUT-'] = "Error:  Something went wrong. Review contents of the input waveform .csv with the selected analysis option."
 
 
 
