@@ -1,2 +1,9 @@
 __pycache__
+<<<<<<< HEAD
 dist
+=======
+__pycache__/
+*.py[cod]
+# **/dist/
+# dist
+>>>>>>> Application

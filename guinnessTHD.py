@@ -1,18 +1,12 @@
 def guinnessTHD(filepath,voltageLimit):
     import numpy as np
-    from support_functions import CheckFile, VoltageCheck, THD
+    from support_functions import THD
     import datetime
     
     # need matplotlib, scipy, numpy, scikit (pip install numpy scikit-learn statsmodels)
 
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
-
-    # filepath = input('This function is intended to calculate the total harmonic distortion (THD) of the Guinness Generator and is intended to take in a .csv with only the pulse envelope.\nEnter the name or file path of the oscilloscope .csv output: ')
-    # filename = CheckFile(filepath)
-
-    # voltageLimit = input("Enter the voltage limit of the Guinness generator of the captured waveform: ")
-    # VoltageCheck(voltageLimit)
     
     headers = ["Time", "Voltage"]
     csvFile = open(filepath)

@@ -1,4 +1,3 @@
-import sys
 import os
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -26,6 +25,7 @@ def CheckCSV(filepath):
 
 def CheckFile(filepath):
     if os.path.exists(filepath):
+
         if filepath[-1] == "/":
             filepath = filepath[:-1]
 
@@ -37,7 +37,11 @@ def CheckFile(filepath):
 
     else:
         status = False
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> Application
     return status
 
 
@@ -49,6 +53,7 @@ def VoltageCheck(voltageLimit):
         status = False
     
     if type(voltageLimit) == float:
+
         voltageLimit = int(voltageLimit)
 
         if voltageLimit > 150 or voltageLimit < 0:
@@ -60,7 +65,11 @@ def VoltageCheck(voltageLimit):
     elif type(voltageLimit) == int:
         if voltageLimit > 150 or voltageLimit < 0:
             status = False
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> Application
         elif voltageLimit <= 150 and voltageLimit >= 0:
             status = True
 
@@ -104,19 +113,22 @@ def plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     first_peakX = x[y_peaks_xvalues[0]]
     first_peakY = y_peaks_yvalues[0]
     
-    # find the cutoff voltage = 66% of the voltage limit
+    # find the cutoff voltage = 66% of the input voltage limit
     cutoff = 0.66*float(voltageLimit)
 
     # index the cutoff voltage
-    ind = np.where(y_peaks_yvalues>=cutoff)[0][0]
+    ind_cutoff = np.where(y_peaks_yvalues>=cutoff)[0][0]
+
+    # index the first point where the voltage reaches the set limit
+    ind_limit = np.argmax(y_peaks_yvalues>=float(voltageLimit))
     
-    # get all peaks BEFORE the indexed cutoff value - this should be when the generator is ramping at 5V/s
-    fiveVoltRampY = y_peaks_yvalues[:ind]
-    fiveVoltRampX = x[y_peaks_xvalues[:ind]]
+    # get all peaks BEFORE the indexed cutoff value - this is when the generator should be ramping at 5V/s
+    fiveVoltRampY = y_peaks_yvalues[:(ind_cutoff-1)]
+    fiveVoltRampX = x[y_peaks_xvalues[:(ind_cutoff-1)]]
     
-    # get all peaks AFTER the indexed cutoff value - this should be when the generator is ramping at 2V/s
-    twoVoltRampY = y_peaks_yvalues[ind:]
-    twoVoltRampX = x[y_peaks_xvalues[ind:]]
+    # get all peaks AFTER the indexed cutoff value and UNTIL the peaks reach the voltage limit - this is when the generator should be ramping at 2V/s
+    twoVoltRampY = y_peaks_yvalues[ind_cutoff:ind_limit]
+    twoVoltRampX = x[y_peaks_xvalues[ind_cutoff:ind_limit]]
     
     # find the line of best fit for the ramping section BEFORE reaching 66%(voltage limit)
     fiveV_rsq, fiveV_slope, fiveV_intercept, fiveV_fit = linearRegression(fiveVoltRampX, fiveVoltRampY)
