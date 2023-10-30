@@ -1,9 +1,4 @@
 import PySimpleGUI as sg
-<<<<<<< HEAD
-import guinnessRampFilter
-import guinnessTHD
-from support_functions import CheckFile, VoltageCheck, CheckCSV
-=======
 import os
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -11,21 +6,12 @@ from scipy import signal
 from scipy.fftpack import fft
 from scipy.fftpack import fftfreq
 import matplotlib.pyplot as plt
->>>>>>> Application
 
 def CheckCSV(filepath):
     csvArray = np.genfromtxt(open(filepath), delimiter=",")
     rows = np.size(csvArray,0)
     columns = np.size(csvArray,1)
 
-<<<<<<< HEAD
-layout = [[sg.Text('Enter a waveform file to evaluate.')],
-          [sg.Text('File:', size=(3, 1)), sg.Input(do_not_clear=True, key="-FILE-"), sg.FileBrowse()],
-          [sg.Text('Enter the voltage limit of the waveform.')],
-          [sg.Text('Voltage Limit:', size=(11, 1)), sg.Input(key="-VOLT-", do_not_clear=True)],
-          [sg.Text(size=(50, 3), key='-OUTPUT-')],
-          [sg.Button('Analyze Guinness Voltage Ramp'), sg.Button('Analyze Guinness Pulse Burst'), sg.Button('Exit')]]
-=======
     if columns > 2 or columns < 2:
         status = False
 
@@ -37,7 +23,6 @@ layout = [[sg.Text('Enter a waveform file to evaluate.')],
             status = True
 
     return status
->>>>>>> Application
 
 def CheckFile(filepath):
     if os.path.exists(filepath):
@@ -328,38 +313,8 @@ info_txt_width = 138
 info_txt_size = 9
 
 while True:
-<<<<<<< HEAD
-    event, value = win1.read(timeout=100)
-    if event == sg.WIN_CLOSED or event == 'Exit':
-        break
-
-    if event == 'Analyze Guinness Voltage Ramp':
-        if value['-FILE-'] != '' and value["-VOLT-"] != '':
-            
-            fileGood = CheckFile(value['-FILE-'])
-            voltageGood = VoltageCheck(value['-VOLT-'])
-
-            # reconfigure to include check for basic csv contents
-
-            if fileGood == True and voltageGood == True:
-
-                guinnessRampFilter(value['-FILE-'], value["-VOLT-"])
-
-            elif fileGood == False and voltageGood == True:
-                value['-OUTPUT-'] = "Invalid filepath or filetype. Input must be a .csv file"
-                win1['-OUTPUT-'].update(value['-OUTPUT-'])
-
-            elif fileGood == True and voltageGood == False:
-                value['-OUTPUT-'] = "Not a valid input. Value must be an integer in the range from 0 to 150."
-                win1['-OUTPUT-'].update(value['-OUTPUT-'])
-
-            elif fileGood == False and voltageGood == False:
-                value['-OUTPUT-'] = "Invalid file and voltage limit."
-                win1['-OUTPUT-'].update(value['-OUTPUT-'])
-=======
     try:
         event, value = win1.read(timeout=100)
->>>>>>> Application
         
         if event == sg.WIN_CLOSED or event == 'Exit':
             break

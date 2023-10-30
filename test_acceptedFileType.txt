@@ -1,0 +1,1 @@
+This is a text file intended to be used in the qualification of ST-0001-066.
