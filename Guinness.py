@@ -179,17 +179,17 @@ def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     elif v < 0:
         y = y[:xN]
     
-    if n!=[] and m!=[]:
+    if n.size>0 and m.size>0:
         ind = max(max(n),max(m))
         x = x[:ind-1]
         y = y[:ind-1]
         # if there are NaN values anywhere in x or y, cut both of them down before the earliest found NaN
-    elif n!=[] and m==[]:
+    elif n.size>0 and m.size==0:
         ind = max(n)
         x = x[:ind-1]
         y = y[:ind-1]
         # if there are NaN values anywhere in x, cut both x and y down before the earliest found NaN in x
-    elif n==[] and m!=[]:
+    elif n.size==0 and m.size>0:
         ind = max(m)
         x = x[:ind-1]
         y = y[:ind-1]
@@ -220,11 +220,12 @@ def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     # plotting the fft
     plt.plot(xf, yf_plottable, label = "FFT of the Pulse Burst")
     plt.text(min(x)+1,max(y)-3,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
-    plt.xlabel("Frequency (mHz)")
+    plt.xlabel("Frequency Bins")
     plt.ylabel(headers[1])
 
     # finding the peaks of the fft of y; this function gives the indices of the values
     y_peaks_xvalues, ypeak_properties = signal.find_peaks(yf_plottable, height=0.10,prominence=0.2,distance=10)
+    xlim = int(np.ceil(y_peaks_xvalues[-1] / 1000.0)) * 1000
 
     # getting the y values of the peaks (these are the amplitudes (V) of the harmonics)
     y_peaks_yvalues = ypeak_properties["peak_heights"]
@@ -237,7 +238,7 @@ def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
 
     # plotting options
     plt.title("Guinness Generator Pulse Burst FFT, THD = {:.3f}%\nVoltage Limit = {}V, Input file name: '{}'".format(thd,voltageLimit, filename))
-    plt.xlim(min(xf),10000)
+    plt.xlim(min(xf),xlim)
     plt.ylim(min(yf_plottable)-3,max(yf_plottable)+3)
     plt.legend(loc="upper right")
 
@@ -268,7 +269,6 @@ def guinnessRampFilter(filepath,voltageLimit):
 
 def guinnessTHD(filepath,voltageLimit):
     import numpy as np
-    from support_functions import THD
     import datetime
     
     # need matplotlib, scipy, numpy, scikit (pip install numpy scikit-learn statsmodels)

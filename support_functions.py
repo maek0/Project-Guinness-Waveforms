@@ -37,11 +37,6 @@ def CheckFile(filepath):
 
     else:
         status = False
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> Application
     return status
 
 
@@ -65,11 +60,6 @@ def VoltageCheck(voltageLimit):
     elif type(voltageLimit) == int:
         if voltageLimit > 150 or voltageLimit < 0:
             status = False
-<<<<<<< HEAD
-            
-=======
-
->>>>>>> Application
         elif voltageLimit <= 150 and voltageLimit >= 0:
             status = True
 
