@@ -302,11 +302,12 @@ layout_win1 = [
                 [sg.Text()],
                 [sg.Text('Voltage Limit:'), sg.Push(), sg.Input(key="-VOLT-", do_not_clear=True, size=(50,3))],
                 [sg.Text()],
-                [sg.Text(size=(70, 5), key='-OUTPUT-', font=('Arial Bold',10,'italic'))],
+                [sg.Text('', key="-OUTPUT-")],
+                [sg.Text()],
                 [sg.Button('Analyze Voltage Ramp'), sg.Button('Analyze Pulse Burst'), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-INFO-'), sg.Button('Exit', button_color='red')]
                 ]
 
-win1 = sg.Window(title='Guinness Waveform Analyzer (ST-0001-066-101A)', layout=layout_win1, size = (600,275))
+win1 = sg.Window(title='Guinness Waveform Analyzer (ST-0001-066-101A)', layout=layout_win1)
 win2_active = False
 
 info_txt_width = 138
@@ -314,7 +315,11 @@ info_txt_size = 9
 
 while True:
     try:
-        event, value = win1.read(timeout=100)
+        event, value = win1.read(timeout=2000)
+        
+        if sg.TIMEOUT_EVENT:
+            value['-OUTPUT-'] = ''
+            win1['-OUTPUT-'].update(value['-OUTPUT-'])
         
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
@@ -338,7 +343,8 @@ while True:
             win2 = sg.Window(title="ST-0001-066-101A Information", layout=layout_win2, size=(1000,810))
 
         if win2_active == True:
-            win2_events, win2_values = win2.read(timeout=100)
+            win2_events, win2_values = win2.read()
+            
             if win2_events == sg.WIN_CLOSED or win2_events == 'Close':
                 win2_active  = False
                 win2.close()
