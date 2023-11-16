@@ -303,10 +303,10 @@ layout_win1 = [
                 [sg.Text('Voltage Limit:'), sg.Push(), sg.Input(key="-VOLT-", do_not_clear=True, size=(50,3))],
                 [sg.Text()],
                 [sg.Text(size=(70, 5), key='-OUTPUT-', font=('Arial Bold',10,'italic'))],
-                [sg.Button('Analyze Voltage Ramp'), sg.Button('Analyze Pulse Burst'), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-INFO-'), sg.Button('Exit', button_color='red')]
-                ]
+                [sg.Text('For treatment output:'), sg.Button('Analyze Voltage Ramp'), sg.Button('Analyze Pulse Burst')],
+                [sg.Text('For placement output:'), sg.Button('Analyze Bipolar Pulse'), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-INFO-'), sg.Button('Exit', button_color='red')]]
 
-win1 = sg.Window(title='Guinness Waveform Analyzer (ST-0001-066-101A)', layout=layout_win1, size = (600,275))
+win1 = sg.Window(title='Guinness Waveform Analyzer (ST-0001-066-101A)', layout=layout_win1)
 win2_active = False
 
 info_txt_width = 138
