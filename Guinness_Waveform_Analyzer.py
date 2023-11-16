@@ -6,6 +6,7 @@ from scipy import signal
 from scipy.fftpack import fft
 from scipy.fftpack import fftfreq
 import matplotlib.pyplot as plt
+import datetime
 
 def CheckCSV(filepath):
     csvArray = np.genfromtxt(open(filepath), delimiter=",")
@@ -140,7 +141,7 @@ def plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     plt.axhline(cutoff, label = "{:.2f}V".format(cutoff), linestyle = "--", color = "black")
     
     # plotting options
-    plt.title("Guinness Generator Output, Voltage Limit = {}V\nInput file name: '{}'".format(voltageLimit, filename))
+    plt.title("Guinness Generator Output Ramp, Voltage Limit = {}V\nInput file name: '{}'".format(voltageLimit, filename))
     plt.text(min(x)+1,max(y)-3,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
     plt.xlabel(headers[0])
     plt.ylabel(headers[1])
@@ -161,6 +162,7 @@ def plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     
     # display the plot
     plt.show()
+    
     
 def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     filename = os.path.basename(filepath)
@@ -234,7 +236,7 @@ def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     plt.plot(y_peaks_xvalues,y_peaks_yvalues,"x", color='red', label = "Harmonic Amplitudes", markersize = 4, markeredgewidth = 1)
 
     # calculating the total harmonic distortion of the signal with its harmonic amplitudes
-    thd = 100*(np.sum(y_peaks_yvalues)-max(y_peaks_yvalues))**0.5 / max(y_peaks_yvalues)
+    thd = 100*((np.sum(y_peaks_yvalues)-max(y_peaks_yvalues))**0.5 / max(y_peaks_yvalues))
 
     # plotting options
     plt.title("Guinness Generator Pulse Burst FFT, THD = {:.3f}%\nVoltage Limit = {}V, Input file name: '{}'".format(thd,voltageLimit, filename))
