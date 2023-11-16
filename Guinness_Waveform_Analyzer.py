@@ -251,12 +251,7 @@ def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
 
 
 def guinnessRampFilter(filepath,voltageLimit):
-    import numpy as np
-    from support_functions import plotting_peaks
-    import datetime
     
-    # need matplotlib, scipy, numpy, scikit (pip install numpy scikit-learn statsmodels), pysimplegui
-
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
     
@@ -270,10 +265,6 @@ def guinnessRampFilter(filepath,voltageLimit):
 
 
 def guinnessTHD(filepath,voltageLimit):
-    import numpy as np
-    import datetime
-    
-    # need matplotlib, scipy, numpy, scikit (pip install numpy scikit-learn statsmodels)
 
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
