@@ -289,7 +289,7 @@ pulse_burst_example = b'iVBORw0KGgoAAAANSUhEUgAAAlAAAAChCAYAAAAIs4HQAAAAAXNSR0IA
 # sg.theme_previewer()
 sg.theme('LightGrey1')
 
-layout_win1 = [
+treatmentLayout = [
                 [sg.Text()],
                 [sg.Text('File:'), sg.Push(), sg.Input(key="-FILE-", do_not_clear=True, size=(50,3)), sg.FileBrowse()],
                 [sg.Text()],
@@ -297,11 +297,28 @@ layout_win1 = [
                 [sg.Text()],
                 [sg.Text('', key="-OUTPUT-")],
                 [sg.Text()],
-                [sg.Button('Analyze Voltage Ramp'), sg.Button('Analyze Pulse Burst'), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-INFO-'), sg.Button('Exit', button_color='red')]
+                [sg.Button('Analyze Voltage Ramp'), sg.Button('Analyze Pulse Burst'), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-TREAT_INFO-')]
+                ]
+
+placementLayout = [
+                [sg.Text()],
+                [sg.Text('File:'), sg.Push(), sg.Input(key="-FILE-", do_not_clear=True, size=(50,3)), sg.FileBrowse()],
+                [sg.Text()],
+                [sg.Text('Voltage Limit:'), sg.Push(), sg.Input(key="-VOLT-", do_not_clear=True, size=(50,3))],
+                [sg.Text()],
+                [sg.Text('', key="-OUTPUT-")],
+                [sg.Text()],
+                [sg.Button('Analyze Bipolar Pulse'), sg.Button('Analyze Tone Sync'), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-PLACE_INFO-')]
+                ]
+
+layout_win1 = [
+                [sg.TabGroup([[sg.Tab("Treatment",treatmentLayout), sg.Tab("Placement", placementLayout)]])],
+                [sg.Push(), sg.Button('Exit', button_color='red')]
                 ]
 
 win1 = sg.Window(title='Guinness Waveform Analyzer (ST-0001-066-101A)', layout=layout_win1)
 win2_active = False
+win3_active = False
 
 info_txt_width = 138
 info_txt_size = 9
@@ -310,14 +327,17 @@ while True:
     try:
         event, value = win1.read(timeout=2000)
         
+        # When 2s elapse, reset the output window to blank. This sets a "timer" on any error text that is displayed there
         if sg.TIMEOUT_EVENT:
             value['-OUTPUT-'] = ''
             win1['-OUTPUT-'].update(value['-OUTPUT-'])
         
+        # Close application if the window is closed or if the "Exit" button is pressed
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
-
-        if event == '-INFO-' and win2_active == False:
+        
+        # TREATMENT INFORMATION WINDOW
+        if event == '-TREAT_INFO-' and win2_active == False:
             win2_active = True
             layout_win2 = [[sg.Text("Instructions For Use", font=('None',12,'bold'))],
                            [sg.Text("Capture the treatment output from the Guinness Generator on an oscilloscope and export the data from the oscilloscope screen as a .csv file. In this application, enter the filepath of the exported .csv file and the voltage limit set during the Guinness Generator treatment output.\n\nThere are several restrictions on the input .csv file to prevent errors and inaccuracies:",size=(info_txt_width, None), font=('None',info_txt_size))],
@@ -335,12 +355,30 @@ while True:
 
             win2 = sg.Window(title="ST-0001-066-101A Information", layout=layout_win2, size=(1000,810))
 
+        # If the treatment info window is up, read events and/or values
         if win2_active == True:
             win2_events, win2_values = win2.read()
             
+            # Close treatment info window if the window is closed or if the "Close" button is pressed
             if win2_events == sg.WIN_CLOSED or win2_events == 'Close':
                 win2_active  = False
                 win2.close()
+        
+        # PLACEMENT INFORMATION WINDOW
+        if event == '-PLACE_INFO-' and win3_active == False:
+            win3_active = True
+            layout_win3 = []
+
+            win3 = sg.Window(title="ST-0001-066-101A Information", layout=layout_win3, size=(1000,810))
+
+        # If the placement info window is up, read events and/or values
+        if win3_active == True:
+            win3_events, win3_values = win3.read()
+            
+            # Close placement info window if the window is closed or if the "Close" button is pressed
+            if win3_events == sg.WIN_CLOSED or win3_events == 'Close':
+                win3_active  = False
+                win3.close()
 
         if event == 'Analyze Voltage Ramp':
 
@@ -443,12 +481,15 @@ while True:
                 value['-OUTPUT-'] = "Error:  Both the filepath and voltage limit must be entered."
                 win1['-OUTPUT-'].update(value['-OUTPUT-'])
     
+    # Catch for value errors, application should not crash this way
     except ValueError:
         value['-OUTPUT-'] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
 
+    # Catch for index errors, application should not crash this way
     except IndexError:
         value['-OUTPUT-'] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
-        
+    
+    # Catch for type errors, application should not crash this way
     except TypeError:
         value['-OUTPUT-'] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
 
