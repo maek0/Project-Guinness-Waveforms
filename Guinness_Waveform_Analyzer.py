@@ -308,9 +308,6 @@ def placementTiming(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     # am I using the set voltage or the measured (avg) max voltage?
     # using set voltage for now - it will be more difficult to use the measured voltage (and not include any overshoot)
     
-    # y1diff = np.diff(y)
-    # # logical array for where y slope is positive/negative?
-    
     ten = 0.1*float(voltageLimit)
     ninety = 0.9*float(voltageLimit)
     half = 0.5*float(voltageLimit)
@@ -320,11 +317,22 @@ def placementTiming(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     negative_ten = np.where(y<=-ten)
     negative_ninety = np.where(y<=-ninety)
     
-    positive_rise_time = x[positive_ninety][0]-x[positive_ten][0]
-    positive_fall_time = x[positive_ten][-1]-x[positive_ninety][-1]
+    positive_ten_rise = x[positive_ten][0]
+    positive_ten_fall = x[positive_ten][-1]
+    positive_ninety_rise = x[positive_ninety][0]
+    positive_ninety_fall = x[positive_ninety][-1]
+    negative_ten_rise = x[negative_ten][0]
+    negative_ten_fall = x[negative_ten][-1]
+    negative_ninety_rise = x[negative_ninety][0]
+    negative_ninety_fall = x[negative_ninety][-1]
     
-    negative_rise_time = x[negative_ninety][0]-x[negative_ten][0]
-    negative_fall_time = x[negative_ten][-1]-x[negative_ninety][-1]
+    # if point is so far away from the ninety point, pop and use the new last element, or just increment to -2
+    
+    positive_rise_time = positive_ninety_rise-positive_ten_rise
+    positive_fall_time = positive_ten_fall-positive_ninety_fall
+    
+    negative_rise_time = negative_ninety_rise-negative_ten_rise
+    negative_fall_time = negative_ten_fall-negative_ninety_fall
     
     # print("Rise and fall times:")
     # print(positive_rise_time)
@@ -333,16 +341,16 @@ def placementTiming(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     # print(negative_fall_time)
     
     # print("\nRise and fall times positive indices:")
-    # print(x[positive_ten][0])
-    # print(x[positive_ninety][0])
-    # print(x[positive_ten][-1])
-    # print(x[positive_ninety][-1])
+    # print(positive_ten_rise)
+    # print(positive_ninety_rise)
+    # print(positive_ten_fall)
+    # print(positive_ninety_fall)
     
     # print("\nRise and fall times negative indices:")
-    # print(x[negative_ten][0])
-    # print(x[negative_ninety][0])
-    # print(x[negative_ten][-1])
-    # print(x[negative_ninety][-1])
+    # print(negative_ten_rise)
+    # print(negative_ninety_rise)
+    # print(negative_ten_fall)
+    # print(negative_ninety_fall)
     
     plt.plot(x,y,label="Placement therapy output", color = "blue")
     plt.xlabel(headers[0])
@@ -350,29 +358,29 @@ def placementTiming(x, y, voltageLimit, filepath, str_datetime_rn, headers):
 
     delay = 0.0005
     points = np.array([
-                [x[positive_ten][0],y[positive_ten][0]],
-                [x[positive_ninety][0],y[positive_ninety][0]],
-                [x[positive_ten][-1],y[positive_ten][-1]],
-                [x[positive_ninety][-1],y[positive_ninety][-1]],
-                [x[negative_ten][0],y[negative_ten][0]],
-                [x[negative_ninety][0],y[negative_ninety][0]],
-                [x[negative_ten][-1],y[negative_ten][-1]],
-                [x[negative_ninety][-1],y[negative_ninety][-1]]
+                [positive_ten_rise,y[positive_ten][0]],
+                [positive_ninety_rise,y[positive_ninety][0]],
+                [positive_ten_fall,y[positive_ten][-1]],
+                [positive_ninety_fall,y[positive_ninety][-1]],
+                [negative_ten_rise,y[negative_ten][0]],
+                [negative_ninety_rise,y[negative_ninety][0]],
+                [negative_ten_fall,y[negative_ten][-1]],
+                [negative_ninety_fall,y[negative_ninety][-1]]
             ])
     
     print(points)
     plt.scatter(points[:,0],points[:,1],marker="x",color="red")
-    plt.plot([(x[positive_ten][0]-delay,ten), (x[positive_ten][-1]+delay,ten)], label = "10% of set voltage, {:.2f}V".format(ten), linestyle = "--", color = "magenta")
-    plt.plot([(x[positive_ninety][0]-delay,ninety), (x[positive_ninety][-1]+delay, ninety)], label = "90% of set voltage, {:.2f}V".format(ninety), linestyle = "--", color = "green")
-    plt.plot([(x[negative_ten][0]-delay,-ten), (x[negative_ten][-1]+delay,-ten)], label = "-{:.2f}V".format(ten), linestyle = "--", color = "magenta")
-    plt.plot([(x[negative_ninety][0]-delay,-ninety), (x[negative_ninety][-1]+delay,-ninety)], label = "-{:.2f}V".format(ninety), linestyle = "--", color = "green")
+    plt.plot([(positive_ten_rise-delay,ten), (positive_ten_fall+delay,ten)], label = "10% of set voltage, {:.2f}V".format(ten), linestyle = "--", color = "magenta")
+    plt.plot([(positive_ninety_rise-delay,ninety), (positive_ninety_fall+delay, ninety)], label = "90% of set voltage, {:.2f}V".format(ninety), linestyle = "--", color = "green")
+    plt.plot([(negative_ten_rise-delay,-ten), (negative_ten_fall+delay,-ten)], label = "-{:.2f}V".format(ten), linestyle = "--", color = "magenta")
+    plt.plot([(negative_ninety_rise-delay,-ninety), (negative_ninety_fall+delay,-ninety)], label = "-{:.2f}V".format(ninety), linestyle = "--", color = "green")
     
     microsecond = 1000000
     
-    plt.text(x[positive_ten][0]-delay,half,"Rise time: {:.4f} $\mu$s".format(positive_rise_time*microsecond),fontsize="small")
-    plt.text(x[positive_ninety][-1]+delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
-    plt.text(x[negative_ten][0]-delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
-    plt.text(x[negative_ninety][-1]+delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
+    plt.text(positive_ten_rise-delay,half,"Rise time: {:.4f} $\mu$s".format(positive_rise_time*microsecond),fontsize="small")
+    plt.text(positive_ninety_fall+delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
+    plt.text(negative_ten_rise-delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
+    plt.text(negative_ninety_fall+delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
     
     plt.text(min(x)+delay,max(y),"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
     
