@@ -304,6 +304,8 @@ def placementTiming(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     filename = os.path.basename(filepath)
     
     y = signal.detrend(y, type="constant")
+    # y = signal.medfilt(y)
+    # y = signal.medfilt(y)
     
     # am I using the set voltage or the measured (avg) max voltage?
     # using set voltage for now - it will be more difficult to use the measured voltage (and not include any overshoot)
@@ -311,32 +313,56 @@ def placementTiming(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     # y1diff = np.diff(y)
     # # logical array for where y slope is positive/negative?
     
-    ten = 0.1*voltageLimit
-    ninety = 0.9*voltageLimit
+    ten = 0.1*float(voltageLimit)
+    ninety = 0.9*float(voltageLimit)
+    half = float(voltageLimit)/2
     
     positive_ten = np.where(y>=ten)
     positive_ninety = np.where(y>ninety)
-    negative_ten = np.where(y<=(-1*ten))
-    negative_ninety = np.where(y<=(-1*ninety))
+    negative_ten = np.where(y<=-ten)
+    negative_ninety = np.where(y<=-ninety)
     
-    positive_rise_time = x(positive_ninety[0])-x(positive_ten[0])
-    positive_fall_time = x(positive_ten[-1])-x(positive_ninety[-1])
+    positive_rise_time = x[positive_ninety][0]-x[positive_ten][0]
+    positive_fall_time = x[positive_ten][-1]-x[positive_ninety][-1]
     
-    negative_rise_time = x(negative_ninety[0])-x(negative_ten[0])
-    negative_fall_time = x(negative_ten[-1])-x(negative_ninety[-1])
+    negative_rise_time = x[positive_ninety][0]-x[negative_ten][0]
+    negative_fall_time = x[negative_ten][-1]-x[negative_ninety][-1]
     
-    plt.plot(x,y)
-    plt.axhline(y=ten, xmin=x(positive_ten[0]-10), xmax=x(positive_ten[-1]+10), label = "10% of set voltage, {:.2f}V".format(ten), linestyle = "--", color = "black")
-    plt.axhline(y=ten, xmin=x(positive_ninety[0]-10), xmax=x(positive_ninety[-1]+10), label = "90% of set voltage, {:.2f}V".format(ninety), linestyle = "--", color = "black")
-    plt.axhline(y=ten, xmin=x(negative_ten[0]-10), xmax=x(negative_ten[-1]+10), label = "-{:.2f}V".format(ten), linestyle = "--", color = "black")
-    plt.axhline(y=ten, xmin=x(negative_ninety[0]-10), xmax=x(negative_ninety[-1]+10), label = "-{:.2f}V".format(ninety), linestyle = "--", color = "black")
     
-    plt.text(x(positive_ten[0]-10),0.5*voltageLimit,"Rise time: {} seconds".format(positive_rise_time),fontsize="small")
-    plt.text(x(positive_ninety[0]-10),0.5*voltageLimit,"Fall time: {} seconds".format(positive_fall_time),fontsize="small")
-    plt.text(x(negative_ten[0]-10),-0.5*voltageLimit,"Rise time: {} seconds".format(negative_rise_time),fontsize="small")
-    plt.text(x(negative_ninety[0]-10),-0.5*voltageLimit,"Fall time: {} seconds".format(negative_fall_time),fontsize="small")
+    # print(positive_rise_time)
+    # print(positive_fall_time)
+    # print(negative_rise_time)
+    # print(negative_fall_time)
+    print(x[positive_ten][0])
+    print(x[positive_ninety][0])
+    print(x[positive_ten][-1])
+    print(x[positive_ninety][-1])
     
-    plt.text(min(x)+1,max(y)-3,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
+    print(x[negative_ten][0])
+    print(x[negative_ninety][0])
+    print(x[negative_ten][-1])
+    print(x[negative_ninety][-1])
+    
+    plt.plot(x,y,label="Placement therapy output")
+    plt.xlabel(headers[0])
+    plt.ylabel(headers[1])
+
+    delay = 0.001
+    plt.plot([(x[positive_ten][0]-delay,ten), (x[positive_ten][-1]+delay,ten)], label = "10% of set voltage, {:.2f}V".format(ten), linestyle = "--", color = "black")
+    plt.plot([(x[positive_ninety][0]-delay,ninety), (x[positive_ninety][-1]+delay, ninety)], label = "90% of set voltage, {:.2f}V".format(ninety), linestyle = "--", color = "black")
+    plt.plot([(x[negative_ten][0]-delay,-ten), (x[negative_ten][-1]+delay,-ten)], label = "-{:.2f}V".format(ten), linestyle = "--", color = "black")
+    plt.plot([(x[negative_ninety][0]-delay,-ninety), (x[negative_ninety][-1]+delay,-ninety)], label = "-{:.2f}V".format(ninety), linestyle = "--", color = "black")
+    # plt.axhline(y=ten, xmin=x[positive_ten][0]-delay, xmax=x[positive_ten][-1]+delay, label = "10% of set voltage, {:.2f}V".format(ten), linestyle = "--", color = "black")
+    # plt.axhline(y=ten, xmin=x[positive_ninety][0]-delay, xmax=x[positive_ninety][-1]+delay, label = "90% of set voltage, {:.2f}V".format(ninety), linestyle = "--", color = "black")
+    # plt.axhline(y=ten, xmin=x[negative_ten][0]-delay, xmax=x[negative_ten][-1]+delay, label = "-{:.2f}V".format(ten), linestyle = "--", color = "black")
+    # plt.axhline(y=ten, xmin=x[negative_ninety][0]-delay, xmax=x[negative_ninety][-1]+delay, label = "-{:.2f}V".format(ninety), linestyle = "--", color = "black")
+    
+    plt.text(x[positive_ten][0]-delay,half,"Rise time: {:.4f} seconds".format(positive_rise_time),fontsize="small")
+    plt.text(x[positive_ninety][0]-delay,half,"Fall time: {:.4f} seconds".format(positive_fall_time),fontsize="small")
+    plt.text(x[negative_ten][0]-delay,-half,"Rise time: {:.4f} seconds".format(negative_rise_time),fontsize="small")
+    plt.text(x[negative_ninety][0]-delay,-half,"Fall time: {:.4f} seconds".format(negative_fall_time),fontsize="small")
+    
+    plt.text(min(x)+delay,max(y)-delay,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
     
     # plotting options
     plt.title("Guinness Generator Placement Bipolar Pulse\nSet Voltage = {}V, Input file name: '{}'".format(voltageLimit, filename))
