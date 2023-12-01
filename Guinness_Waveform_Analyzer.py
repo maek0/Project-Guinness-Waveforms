@@ -308,25 +308,45 @@ def placementTiming(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     # am I using the set voltage or the measured (avg) max voltage?
     # using set voltage for now - it will be more difficult to use the measured voltage (and not include any overshoot)
     
+    # if point is so far away from the ninety point, pop and use the new last element, or just increment to -2
+
+    y_diff2 = np.gradient(np.gradient(y))
+    peak_indices, peak_info = signal.find_peaks(y_diff2,height=0.05)
+
+    peak_heights = peak_info['peak_heights']
+
+    # highest_peak_index = peak_indices[np.argmax(peak_heights)]
+    second_and_third_highest_peak_indices = [peak_indices[np.argpartition(peak_heights,-2)[-2]], peak_indices[np.argpartition(peak_heights,-3)[-3]]]
+    # third_highest_peak_index = peak_indices[np.argpartition(peak_heights,-3)[-3]]
+
+    buff = 70
+
+    first_cutoff_index = min(second_and_third_highest_peak_indices)-buff
+    second_cutoff_index = max(second_and_third_highest_peak_indices)+buff
+
+    y_windowed = y[first_cutoff_index:second_cutoff_index]
+    x_windowed = x[first_cutoff_index:second_cutoff_index]
+
     ten = 0.1*float(voltageLimit)
     ninety = 0.9*float(voltageLimit)
     half = 0.5*float(voltageLimit)
     
-    positive_ten = np.where(y>=ten)
-    positive_ninety = np.where(y>=ninety)
-    negative_ten = np.where(y<=-ten)
-    negative_ninety = np.where(y<=-ninety)
+    positive_ten = np.where(y_windowed>=ten)
+    positive_ninety = np.where(y_windowed>=ninety)
+    negative_ten = np.where(y_windowed<=-ten)
+    negative_ninety = np.where(y_windowed<=-ninety)
     
-    positive_ten_rise = x[positive_ten][0]
-    positive_ten_fall = x[positive_ten][-1]
-    positive_ninety_rise = x[positive_ninety][0]
-    positive_ninety_fall = x[positive_ninety][-1]
-    negative_ten_rise = x[negative_ten][0]
-    negative_ten_fall = x[negative_ten][-1]
-    negative_ninety_rise = x[negative_ninety][0]
-    negative_ninety_fall = x[negative_ninety][-1]
-    
-    # if point is so far away from the ninety point, pop and use the new last element, or just increment to -2
+    positive_ten_rise = x_windowed[positive_ten][0]
+    positive_ten_fall = x_windowed[positive_ten][-1]
+    positive_ninety_rise = x_windowed[positive_ninety][0]
+    positive_ninety_fall = x_windowed[positive_ninety][-1]
+    negative_ten_rise = x_windowed[negative_ten][0]
+    negative_ten_fall = x_windowed[negative_ten][-1]
+    negative_ninety_rise = x_windowed[negative_ninety][0]
+    negative_ninety_fall = x_windowed[negative_ninety][-1]
+
+    # plt.plot(x,y_diff2)
+    # plt.show()
     
     positive_rise_time = positive_ninety_rise-positive_ten_rise
     positive_fall_time = positive_ten_fall-positive_ninety_fall
@@ -352,24 +372,26 @@ def placementTiming(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     # print(negative_ten_fall)
     # print(negative_ninety_fall)
     
-    plt.plot(x,y,label="Placement therapy output", color = "blue")
+    plt.plot(x_windowed,y_windowed,label="Placement therapy output", color = "blue")
     plt.xlabel(headers[0])
     plt.ylabel(headers[1])
 
-    delay = 0.0005
+    delay = 0.0001
     points = np.array([
-                [positive_ten_rise,y[positive_ten][0]],
-                [positive_ninety_rise,y[positive_ninety][0]],
-                [positive_ten_fall,y[positive_ten][-1]],
-                [positive_ninety_fall,y[positive_ninety][-1]],
-                [negative_ten_rise,y[negative_ten][0]],
-                [negative_ninety_rise,y[negative_ninety][0]],
-                [negative_ten_fall,y[negative_ten][-1]],
-                [negative_ninety_fall,y[negative_ninety][-1]]
+                [positive_ten_rise,y_windowed[positive_ten][0]],
+                [positive_ninety_rise,y_windowed[positive_ninety][0]],
+                [positive_ten_fall,y_windowed[positive_ten][-1]],
+                [positive_ninety_fall,y_windowed[positive_ninety][-1]],
+                [negative_ten_rise,y_windowed[negative_ten][0]],
+                [negative_ninety_rise,y_windowed[negative_ninety][0]],
+                [negative_ten_fall,y_windowed[negative_ten][-1]],
+                [negative_ninety_fall,y_windowed[negative_ninety][-1]]
             ])
     
-    print(points)
+    # print(points)
+
     plt.scatter(points[:,0],points[:,1],marker="x",color="red")
+    
     plt.plot([(positive_ten_rise-delay,ten), (positive_ten_fall+delay,ten)], label = "10% of set voltage, {:.2f}V".format(ten), linestyle = "--", color = "magenta")
     plt.plot([(positive_ninety_rise-delay,ninety), (positive_ninety_fall+delay, ninety)], label = "90% of set voltage, {:.2f}V".format(ninety), linestyle = "--", color = "green")
     plt.plot([(negative_ten_rise-delay,-ten), (negative_ten_fall+delay,-ten)], label = "-{:.2f}V".format(ten), linestyle = "--", color = "magenta")
@@ -382,12 +404,12 @@ def placementTiming(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     plt.text(negative_ten_rise-delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
     plt.text(negative_ninety_fall+delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
     
-    plt.text(min(x)+delay,max(y),"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
+    plt.text(min(x_windowed)+delay/2,max(y_windowed)+0.9,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
     
     # plotting options
     plt.title("Guinness Generator Placement Bipolar Pulse\nSet Voltage = {}V, Input file name: '{}'".format(voltageLimit, filename))
-    plt.xlim(min(x),max(x))
-    plt.ylim(min(y)-3,max(y)+3)
+    plt.xlim(min(x_windowed),max(x_windowed))
+    plt.ylim(min(y_windowed)-1,max(y_windowed)+1)
     plt.legend(loc="upper right")
 
     # display the plot
