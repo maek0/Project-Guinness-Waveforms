@@ -301,6 +301,14 @@ def guinnessTHD(filepath,voltageLimit):
 
 
 def placementTimingLowResInput(x, y, voltageLimit, filepath, str_datetime_rn, headers):
+
+    '''
+    DO THIS FOR ALL 
+    - CREATE A LINE FROM THE MIN TO THE MAX 
+    - PLOT WHERE THE LINE INTERCEPTS THE PLOTTING 10% AND 90% LINES 
+    - CALCULATE RISE/FALL TIME FROM THOSE POINTS
+    '''
+
     filename = os.path.basename(filepath)
     
     y = signal.detrend(y, type="constant")
@@ -315,9 +323,8 @@ def placementTimingLowResInput(x, y, voltageLimit, filepath, str_datetime_rn, he
 
     peak_heights = peak_info['peak_heights']
 
-    # highest_peak_index = peak_indices[np.argmax(peak_heights)]
+    highest_peak_index = peak_indices[np.argmax(peak_heights)]
     second_and_third_highest_peak_indices = [peak_indices[np.argpartition(peak_heights,-2)[-2]], peak_indices[np.argpartition(peak_heights,-3)[-3]]]
-    # third_highest_peak_index = peak_indices[np.argpartition(peak_heights,-3)[-3]]
 
     buff = 5
 
@@ -327,84 +334,103 @@ def placementTimingLowResInput(x, y, voltageLimit, filepath, str_datetime_rn, he
     y_windowed = y[first_cutoff_index:second_cutoff_index]
     x_windowed = x[first_cutoff_index:second_cutoff_index]
 
-    plt.plot(x_windowed,y_windowed)
-    plt.show()
+    # plt.plot(x_windowed,y_windowed)
+    # plt.show()
 
+    five = 0.05*float(voltageLimit)
     ten = 0.1*float(voltageLimit)
     ninety = 0.9*float(voltageLimit)
+    ninetyfive = 0.95*float(voltageLimit)
     half = 0.5*float(voltageLimit)
     
-    positive_ten = np.where(y_windowed>=ten)
-    positive_ninety = np.where(y_windowed>=ninety)
-    negative_ten = np.where(y_windowed<=-ten)
-    negative_ninety = np.where(y_windowed<=-ninety)
+    positive_ten = np.where(y_windowed>=five)
+    positive_ninety = np.where(y_windowed>=ninetyfive)
+    negative_ten = np.where(y_windowed<=-five)
+    negative_ninety = np.where(y_windowed<=-ninetyfive)
     
+
+    ## Assigning min and max points of the pulse to variables ##
     positive_ten_rise = x_windowed[positive_ten][0]
-    positive_ten_fall = x_windowed[positive_ten][-1]
+    if x_windowed[0] < positive_ten_rise:
+        positive_ten_rise = x_windowed[0]
+        
     positive_ninety_rise = x_windowed[positive_ninety][0]
     positive_ninety_fall = x_windowed[positive_ninety][-1]
-    negative_ten_rise = x_windowed[negative_ten][0]
+
     negative_ten_fall = x_windowed[negative_ten][-1]
+    if x_windowed[-1] > negative_ten_fall:
+        negative_ten_fall = x_windowed[-1]
+
     negative_ninety_rise = x_windowed[negative_ninety][0]
     negative_ninety_fall = x_windowed[negative_ninety][-1]
 
-    # plt.plot(x,y_diff2)
-    # plt.show()
     
     positive_rise_time = positive_ninety_rise-positive_ten_rise
-    positive_fall_time = positive_ten_fall-positive_ninety_fall
-    
-    negative_rise_time = negative_ninety_rise-negative_ten_rise
+    switch_time = negative_ninety_rise-positive_ninety_fall
     negative_fall_time = negative_ten_fall-negative_ninety_fall
     
-    # print("Rise and fall times:")
-    # print(positive_rise_time)
-    # print(positive_fall_time)
-    # print(negative_rise_time)
-    # print(negative_fall_time)
-    
-    # print("\nRise and fall times positive indices:")
-    # print(positive_ten_rise)
-    # print(positive_ninety_rise)
-    # print(positive_ten_fall)
-    # print(positive_ninety_fall)
-    
-    # print("\nRise and fall times negative indices:")
-    # print(negative_ten_rise)
-    # print(negative_ninety_rise)
-    # print(negative_ten_fall)
-    # print(negative_ninety_fall)
     
     plt.plot(x_windowed,y_windowed,label="Placement therapy output", color = "blue")
     plt.xlabel(headers[0])
     plt.ylabel(headers[1])
 
     delay = 0.0001
-    points = np.array([
-                [positive_ten_rise,y_windowed[positive_ten][0]],
-                [positive_ninety_rise,y_windowed[positive_ninety][0]],
-                [positive_ten_fall,y_windowed[positive_ten][-1]],
-                [positive_ninety_fall,y_windowed[positive_ninety][-1]],
-                [negative_ten_rise,y_windowed[negative_ten][0]],
-                [negative_ninety_rise,y_windowed[negative_ninety][0]],
-                [negative_ten_fall,y_windowed[negative_ten][-1]],
-                [negative_ninety_fall,y_windowed[negative_ninety][-1]]
-            ])
-    
-    # print(points)
+    if negative_ten_fall != x_windowed[-1] and positive_ten_rise != x_windowed[0]:
+        points = np.array([
+                    [positive_ten_rise,y_windowed[positive_ten][0]],
+                    [positive_ninety_rise,y_windowed[positive_ninety][0]],
+                    # [positive_ten_fall,y_windowed[positive_ten][-1]],
+                    [positive_ninety_fall,y_windowed[positive_ninety][-1]],
+                    # [negative_ten_rise,y_windowed[negative_ten][0]],
+                    [negative_ninety_rise,y_windowed[negative_ninety][0]],
+                    [negative_ten_fall,y_windowed[negative_ten][-1]],
+                    [negative_ninety_fall,y_windowed[negative_ninety][-1]]
+                ])
+    elif negative_ten_fall == x_windowed[-1] and positive_ten_rise == x_windowed[0]:
+        points = np.array([
+                    [positive_ten_rise,y_windowed[0]],
+                    [positive_ninety_rise,y_windowed[positive_ninety][0]],
+                    [positive_ninety_fall,y_windowed[positive_ninety][-1]],
+                    [negative_ninety_rise,y_windowed[negative_ninety][0]],
+                    [negative_ten_fall,y_windowed[-1]],
+                    [negative_ninety_fall,y_windowed[negative_ninety][-1]]
+                ])
+    elif negative_ten_fall == x_windowed[-1] and positive_ten_rise != x_windowed[0]:
+        points = np.array([
+                    [positive_ten_rise,y_windowed[positive_ten][0]],
+                    [positive_ninety_rise,y_windowed[positive_ninety][0]],
+                    [positive_ninety_fall,y_windowed[positive_ninety][-1]],
+                    [negative_ninety_rise,y_windowed[negative_ninety][0]],
+                    [negative_ten_fall,y_windowed[-1]],
+                    [negative_ninety_fall,y_windowed[negative_ninety][-1]]
+                ])
+    elif negative_ten_fall != x_windowed[-1] and positive_ten_rise == x_windowed[0]:
+        points = np.array([
+                    [positive_ten_rise,y_windowed[0]],
+                    [positive_ninety_rise,y_windowed[positive_ninety][0]],
+                    [positive_ninety_fall,y_windowed[positive_ninety][-1]],
+                    [negative_ninety_rise,y_windowed[negative_ninety][0]],
+                    [negative_ten_fall,y_windowed[negative_ten][-1]],
+                    [negative_ninety_fall,y_windowed[negative_ninety][-1]]
+                ])
 
     plt.scatter(points[:,0],points[:,1],marker="x",color="red")
     
-    # plt.plot([(positive_ten_rise-delay,ten), (positive_ten_fall+delay,ten)], label = "10% of set voltage, {:.2f}V".format(ten), linestyle = "--", color = "magenta")
-    # plt.plot([(positive_ninety_rise-delay,ninety), (positive_ninety_fall+delay, ninety)], label = "90% of set voltage, {:.2f}V".format(ninety), linestyle = "--", color = "green")
-    # plt.plot([(negative_ten_rise-delay,-ten), (negative_ten_fall+delay,-ten)], label = "-{:.2f}V".format(ten), linestyle = "--", color = "magenta")
-    # plt.plot([(negative_ninety_rise-delay,-ninety), (negative_ninety_fall+delay,-ninety)], label = "-{:.2f}V".format(ninety), linestyle = "--", color = "green")
-    
+    one_mark = x_windowed[-1]/second_and_third_highest_peak_indices[0]
+    two_mark = x_windowed[-1]/highest_peak_index
+    three_mark = x_windowed[-1]/second_and_third_highest_peak_indices[1]
+
+    plt.axhline(ten, xmin=one_mark, xmax=two_mark, label = "10% of set voltage, {:.2f}V".format(ten), linestyle = "--", color = "magenta")
+    plt.axhline(ninety, xmin=one_mark, xmax=two_mark, label = "90% of set voltage, {:.2f}V".format(ninety), linestyle = "--", color = "green")
+    plt.axhline(-ten, xmin=two_mark, xmax=three_mark, label = "-{:.2f}V".format(ten), linestyle = "--", color = "magenta")
+    plt.axhline(-ninety, xmin=two_mark, xmax=three_mark, label = "-{:.2f}V".format(ninety), linestyle = "--", color = "green")
+
     microsecond = 1000000
     
     plt.text(positive_ten_rise-delay,half,"Rise time: {:.4f} $\mu$s".format(positive_rise_time*microsecond),fontsize="small")
-    plt.text(positive_ninety_fall+delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
-    plt.text(negative_ten_rise-delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
+    # plt.text(positive_ninety_fall+delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
+    plt.text(positive_ninety_fall+delay,half,"Time: {:.4f} $\mu$s".format(switch_time*microsecond),fontsize="small")
+    # plt.text(negative_ten_rise-delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
     plt.text(negative_ninety_fall+delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
     
     plt.text(min(x_windowed)+delay/2,max(y_windowed)+0.9,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
@@ -419,7 +445,7 @@ def placementTimingLowResInput(x, y, voltageLimit, filepath, str_datetime_rn, he
     plt.show()
 
 
-def placementTimingHighResInput(x, y, voltageLimit, filepath, str_datetime_rn, headers):
+def placementTimingNormal(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     filename = os.path.basename(filepath)
     y = signal.detrend(y, type="constant")
 
@@ -431,7 +457,7 @@ def placementTimingHighResInput(x, y, voltageLimit, filepath, str_datetime_rn, h
     highest_peak_index = peak_indices[np.argmax(peak_heights)]
     second_and_third_highest_peak_indices = [peak_indices[np.argpartition(peak_heights,-2)[-2]], peak_indices[np.argpartition(peak_heights,-3)[-3]]]
 
-    buff = 50
+    buff = 200
 
     first_cutoff_index = min(second_and_third_highest_peak_indices)-buff
     second_cutoff_index = max(second_and_third_highest_peak_indices)+buff
@@ -439,8 +465,8 @@ def placementTimingHighResInput(x, y, voltageLimit, filepath, str_datetime_rn, h
     y_windowed = y[first_cutoff_index:second_cutoff_index]
     x_windowed = x[first_cutoff_index:second_cutoff_index]
 
-    plt.plot(x_windowed,y_windowed)
-    plt.show()
+    # plt.plot(x_windowed,y_windowed)
+    # plt.show()
 
     ten = 0.1*float(voltageLimit)
     ninety = 0.9*float(voltageLimit)
@@ -484,25 +510,25 @@ def placementTimingHighResInput(x, y, voltageLimit, filepath, str_datetime_rn, h
 
     plt.scatter(points[:,0],points[:,1],marker="x",color="red")
     
-    one_mark = x_windowed[-1]/second_and_third_highest_peak_indices[0]
-    two_mark = x_windowed[-1]/highest_peak_index
-    three_mark = x_windowed[-1]/second_and_third_highest_peak_indices[1]
+    # one_mark = x_windowed[-1]/second_and_third_highest_peak_indices[0]
+    # two_mark = x_windowed[-1]/highest_peak_index
+    # three_mark = x_windowed[-1]/second_and_third_highest_peak_indices[1]
+    one_mark = 0
+    two_mark = 0.6
+    three_mark = 0.4
+    four_mark = 1
 
-    plt.axhline(ten, xmin=one_mark, xmax=two_mark, label = "10% of set voltage, {:.2f}V".format(ten), linestyle = "--", color = "magenta")
-    plt.axhline(ninety, xmin=one_mark, xmax=two_mark, label = "90% of set voltage, {:.2f}V".format(ninety), linestyle = "--", color = "green")
-    plt.axhline(-ten, xmin=two_mark, xmax=three_mark, label = "-{:.2f}V".format(ten), linestyle = "--", color = "magenta")
-    plt.axhline(-ninety, xmin=two_mark, xmax=three_mark, label = "-{:.2f}V".format(ninety), linestyle = "--", color = "green")
-    # plt.plot([(positive_ten_rise-delay,ten), (positive_ten_fall+delay,ten)], label = "10% of set voltage, {:.2f}V".format(ten), linestyle = "--", color = "magenta")
-    # plt.plot([(positive_ninety_rise-delay,ninety), (positive_ninety_fall+delay, ninety)], label = "90% of set voltage, {:.2f}V".format(ninety), linestyle = "--", color = "green")
-    # plt.plot([(negative_ten_rise-delay,-ten), (negative_ten_fall+delay,-ten)], label = "-{:.2f}V".format(ten), linestyle = "--", color = "magenta")
-    # plt.plot([(negative_ninety_rise-delay,-ninety), (negative_ninety_fall+delay,-ninety)], label = "-{:.2f}V".format(ninety), linestyle = "--", color = "green")
+    plt.axhline(ten, xmin=one_mark, xmax=two_mark, label = "10% of set voltage, (+/-) {:.2f}V".format(ten), linestyle = "--", color = "magenta")
+    plt.axhline(ninety, xmin=one_mark, xmax=two_mark, label = "90% of set voltage, (+/-) {:.2f}V".format(ninety), linestyle = "--", color = "green")
+    plt.axhline(-ten, xmin=three_mark, xmax=four_mark, linestyle = "--", color = "magenta")
+    plt.axhline(-ninety, xmin=three_mark, xmax=four_mark, linestyle = "--", color = "green")
     
     microsecond = 1000000
     
-    plt.text(positive_ten_rise-delay,half,"Rise time: {:.4f} $\mu$s".format(positive_rise_time*microsecond),fontsize="small")
-    plt.text(positive_ninety_fall+delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
-    plt.text(negative_ten_rise-delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
-    plt.text(negative_ninety_fall+delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
+    plt.text(positive_ten_rise+delay,half,"Rise time: {:.4f} $\mu$s".format(positive_rise_time*microsecond),fontsize="small")
+    plt.text(positive_ninety_fall-2*delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
+    plt.text(negative_ten_rise+delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
+    plt.text(negative_ninety_fall-2*delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
     
     plt.text(min(x_windowed)+delay/2,max(y_windowed)+0.9,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
     
@@ -539,7 +565,7 @@ def normalRiseFall(filepath,voltageLimit):
     x = csvArray[2:-2,0]
     y = csvArray[2:-2,1]
     
-    placementTimingHighResInput(x, y, voltageLimit, filepath, str_datetime_rn, headers)
+    placementTimingNormal(x, y, voltageLimit, filepath, str_datetime_rn, headers)
 
 
 def audioDelay(x, place, audio, voltageLimit, filepath, str_datetime_rn, headers):
@@ -793,7 +819,7 @@ while True:
 
                     if csvGood == True:
                         try:
-                            lowresRiseFall(value["-PLACEMENT_FILE-"], value["-PLACEMENT_VOLT-"])
+                            normalRiseFall(value["-PLACEMENT_FILE-"], value["-PLACEMENT_VOLT-"])
                         except ValueError:
                             value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
@@ -842,7 +868,7 @@ while True:
 
                     if csvGood == True:
                         try:
-                            normalRiseFall(value["-PLACEMENT_FILE-"], value["-PLACEMENT_VOLT-"])
+                            lowresRiseFall(value["-PLACEMENT_FILE-"], value["-PLACEMENT_VOLT-"])
                         except ValueError:
                             value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
