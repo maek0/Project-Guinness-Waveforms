@@ -313,9 +313,6 @@ def placementTimingLowResInput(x, y, voltageLimit, filepath, str_datetime_rn, he
     
     y = signal.detrend(y, type="constant")
     
-    # am I using the set voltage or the measured (avg) max voltage?
-    # using set voltage for now - it will be more difficult to use the measured voltage (and not include any overshoot)
-    
     # if point is so far away from the ninety point, pop and use the new last element, or just increment to -2
 
     y_diff2 = np.gradient(np.gradient(y))
