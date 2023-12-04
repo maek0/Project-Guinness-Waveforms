@@ -568,7 +568,52 @@ def normalRiseFall(filepath,voltageLimit):
 def audioDelay(x, place, audio, voltageLimit, filepath, str_datetime_rn, headers):
     filename = os.path.basename(filepath)
     
-    y = signal.detrend(y, type="constant")
+    place = signal.detrend(place, type="constant")
+    audio = signal.detrend(audio, type="constant")
+    
+    # vertically offset the audio signal for clearer graphing/visualization
+    audio = audio + 0.5
+
+    # plot placement and audio
+    plt.plot(x, place, label = "Placement Output", color = "blue")
+    plt.plot(x, audio, label = "Placement Audio", color = "orange")
+
+    placement_peakIndices, _ = signal.find_peaks(place, height=0.2, distance=500)
+    placement_peakHeights = place[placement_peakIndices]
+
+    audio_peakIndices, _ = signal.find_peaks(audio, height=0.515, distance=500)
+    audio_peakHeights = audio[audio_peakIndices]
+
+    diff = []
+    for i in range(0,len(audio_peakIndices),1):
+        for j in range(0,len(placement_peakIndices),1):
+            if np.abs(audio_peakIndices[i]-placement_peakIndices[j])<500:
+                diff_temp = np.abs(x[audio_peakIndices[i]]-x[placement_peakIndices[j]])
+                diff.append(diff_temp)
+                plt.text(x[audio_peakIndices[i]]-0.05,audio[audio_peakIndices[i]]+0.2,"Delay = {:.4f}s".format(diff_temp))
+            else:
+                pass
+
+    diff = np.array(diff)
+    average_delay = np.mean(diff)
+
+    # plot peaks of placement and audio
+    plt.scatter(x[placement_peakIndices], placement_peakHeights,marker="x",color="black",s=50,label="Placement Pulse(s)")
+    plt.scatter(x[audio_peakIndices],audio_peakHeights,marker="x",color="red", s=50,label="Audio Tone(s)")
+
+    # tool name
+    plt.text(min(x)+0.1,max(place)+0.5,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
+
+    # plotting options
+    plt.title("Guinness Generator Placement Output and Audio Tones\nSet Voltage = {}V, Input File Name = '{}'\nAverage Tone Delay = {:.4f} seconds".format(voltageLimit, filename, average_delay))
+    plt.xlim(min(x),max(x))
+    plt.ylim(min(place)-1,max(place)+1)
+    plt.legend(loc="lower right")
+    plt.xlabel(headers[0])
+    plt.ylabel(headers[1])
+
+    # display the plot
+    plt.show()
     
     
 def guinnessAudioSync(filepath,voltageLimit):
