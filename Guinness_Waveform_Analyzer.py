@@ -114,7 +114,17 @@ def linearRegression(x, y):
     return r_sq, slope, intercept, y_predict
 
 
-def plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers):
+def guinnessRampFilter(filepath,voltageLimit):
+    
+    datetime_rn = datetime.datetime.now()
+    str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
+    
+    headers = ["Time", "Voltage"]
+    csvFile = open(filepath)
+    csvArray = np.genfromtxt(csvFile, delimiter=",")
+    x = csvArray[2:,0]
+    y = csvArray[2:,1]
+    
     filename = os.path.basename(filepath)
     y = signal.detrend(y, type="constant")
     
@@ -183,9 +193,19 @@ def plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     
     # display the plot
     plt.show()
+
+
+def guinnessTHD(filepath,voltageLimit):
+
+    datetime_rn = datetime.datetime.now()
+    str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
     
+    headers = ["Time", "Voltage"]
+    csvFile = open(filepath)
+    csvArray = np.genfromtxt(csvFile, delimiter=",")
+    x = csvArray[2:-2,0]
+    y = csvArray[2:-2,1]
     
-def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     filename = os.path.basename(filepath)
     y = signal.detrend(y, type="constant")
 
@@ -268,26 +288,9 @@ def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
 
     # display the plot
     plt.show()
-    
-    return thd
 
 
-def guinnessRampFilter(filepath,voltageLimit):
-    
-    datetime_rn = datetime.datetime.now()
-    str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
-    
-    headers = ["Time", "Voltage"]
-    csvFile = open(filepath)
-    csvArray = np.genfromtxt(csvFile, delimiter=",")
-    x = csvArray[2:,0]
-    y = csvArray[2:,1]
-    
-    plotting_peaks(x, y, voltageLimit, filepath, str_datetime_rn, headers)
-
-
-def guinnessTHD(filepath,voltageLimit):
-
+def lowresRiseFall(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
     
@@ -296,11 +299,6 @@ def guinnessTHD(filepath,voltageLimit):
     csvArray = np.genfromtxt(csvFile, delimiter=",")
     x = csvArray[2:-2,0]
     y = csvArray[2:-2,1]
-    
-    THD(x, y, voltageLimit, filepath, str_datetime_rn, headers)
-
-
-def placementTimingLowResInput(x, y, voltageLimit, filepath, str_datetime_rn, headers):
 
     '''
     DO THIS FOR ALL 
@@ -442,7 +440,16 @@ def placementTimingLowResInput(x, y, voltageLimit, filepath, str_datetime_rn, he
     plt.show()
 
 
-def placementTimingNormal(x, y, voltageLimit, filepath, str_datetime_rn, headers):
+def normalRiseFall(filepath,voltageLimit):
+    datetime_rn = datetime.datetime.now()
+    str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
+    
+    headers = ["Time", "Voltage"]
+    csvFile = open(filepath)
+    csvArray = np.genfromtxt(csvFile, delimiter=",")
+    x = csvArray[2:-2,0]
+    y = csvArray[2:-2,1]
+    
     filename = os.path.basename(filepath)
     y = signal.detrend(y, type="constant")
 
@@ -538,8 +545,8 @@ def placementTimingNormal(x, y, voltageLimit, filepath, str_datetime_rn, headers
     # display the plot
     plt.show()
 
-
-def lowresRiseFall(filepath,voltageLimit):
+    
+def guinnessAudioSync(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
     
@@ -547,25 +554,9 @@ def lowresRiseFall(filepath,voltageLimit):
     csvFile = open(filepath)
     csvArray = np.genfromtxt(csvFile, delimiter=",")
     x = csvArray[2:-2,0]
-    y = csvArray[2:-2,1]
+    place = csvArray[2:-2,1]
+    audio = csvArray[2:-2,2]
     
-    placementTimingLowResInput(x, y, voltageLimit, filepath, str_datetime_rn, headers)
-
-
-def normalRiseFall(filepath,voltageLimit):
-    datetime_rn = datetime.datetime.now()
-    str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
-    
-    headers = ["Time", "Voltage"]
-    csvFile = open(filepath)
-    csvArray = np.genfromtxt(csvFile, delimiter=",")
-    x = csvArray[2:-2,0]
-    y = csvArray[2:-2,1]
-    
-    placementTimingNormal(x, y, voltageLimit, filepath, str_datetime_rn, headers)
-
-
-def audioDelay(x, place, audio, voltageLimit, filepath, str_datetime_rn, headers):
     filename = os.path.basename(filepath)
     
     place = signal.detrend(place, type="constant")
@@ -614,20 +605,6 @@ def audioDelay(x, place, audio, voltageLimit, filepath, str_datetime_rn, headers
 
     # display the plot
     plt.show()
-    
-    
-def guinnessAudioSync(filepath,voltageLimit):
-    datetime_rn = datetime.datetime.now()
-    str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
-    
-    headers = ["Time", "Voltage"]
-    csvFile = open(filepath)
-    csvArray = np.genfromtxt(csvFile, delimiter=",")
-    x = csvArray[2:-2,0]
-    place = csvArray[2:-2,1]
-    audio = csvArray[2:-2,2]
-    
-    audioDelay(x, place, audio, voltageLimit, filepath, str_datetime_rn, headers)
 
 help_button_base64 = b'iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABq0lEQVRIie1VPS8EURTdIJEIEvOxGyRCUPADJFtIBIVEva1CQ6NQCLHz3lMqdKJQoNNJJKKhoNDRiUjQqXwEEcy6b5LnDEE28+Zjl46b3GrmnnPvuWfupFJ/IswpVWdzL2dxuWRx2rQZbdtcrqQZjZtCNZUN3ChUjcWI25weAaj0SZ7F5Koxq5pL6xqd2UwehgMXJya7NYXsSwReL5SBorOk4F8kjFxDUE8sATTeiuj0GpKchxIxurSFqg0FTzM5ENVlRritKaGqsPCLcBI5F0qAMTeiZZDDmbzbhvduIqS6QhMVAfCOCVUNCZ5K1V6XsHA2qH3ebY8sZLSOCeYhz0Hswp3XUY3+lI0pPIK+C77GsVMwmgkQGE6hK0HhXhICk9NYgODjJJD3GwS2kENaF+Hh/k8J4KJn/8zobYrlxO7A8UYAshtKwOWaFvw9cqoSICchxcuQcPo7deD00iBUSziBv2xR6AbAQzn+19pTF7iM/SC5Sw6Os81pMhH4Z1hOoRNFO/HWladpIQdLAi8iYtSLxS3iKz6Gi+59nW3/nOPL9v90/vErG/w/3gALBuad4TTYiQAAAABJRU5ErkJggg=='
 
