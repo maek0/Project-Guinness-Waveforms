@@ -165,8 +165,6 @@ def plotContents(filepath, columns):
 
 
 def linearRegression(x, y):
-    y = signal.detrend(y, type="constant")
-    
     # reshape the input x value so that the LinearRegression function can accept it
     x = np.array(x).reshape((-1, 1))
 
@@ -232,7 +230,7 @@ def guinnessRampFilter(filepath,voltageLimit):
         y = y[:ind-1]
     
     # find the indices of the peaks of the output energy signal (not including voltage checks)
-    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=2.5,prominence=15,distance=50)
+    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=2.5,prominence=15,distance=350)
 
     # get the y-values of the output energy peaks
     y_peaks_yvalues = ypeak_properties["peak_heights"]
@@ -248,7 +246,10 @@ def guinnessRampFilter(filepath,voltageLimit):
     ind_cutoff = np.where(y_peaks_yvalues>=cutoff)[0][0]
 
     # index the first point where the voltage reaches the set limit
-    ind_limit = np.argmax(y_peaks_yvalues>=float(voltageLimit))
+    if max(y_peaks_yvalues)<float(voltageLimit):
+        ind_limit = y_peaks_xvalues[-1]
+    else:
+        ind_limit = np.argmax(y_peaks_yvalues>=float(voltageLimit))
     
     # get all peaks BEFORE the indexed cutoff value - this is when the generator should be ramping at 5V/s
     fiveVoltRampY = y_peaks_yvalues[:(ind_cutoff-1)]
@@ -768,9 +769,9 @@ while True:
         
         # When 2s elapse, reset the output window to blank. This sets a "timer" on any error text that is displayed there
         if sg.TIMEOUT_EVENT:
-            value["-ERROR_TREATMENT-"] = ''
+            value["-ERROR_TREATMENT-"] = " "
             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
-            value["-ERROR_PLACEMENT-"] = ''
+            value["-ERROR_PLACEMENT-"] = " "
             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
         
         # Close application if the window is closed or if the "Exit" button is pressed
@@ -812,37 +813,37 @@ while True:
                 win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
         if event == '-P_PLOT-':
-            if value["-TREATMENT_FILE-"] != '':
+            if value["-PLACEMENT_FILE-"] != '':
                 
-                fileGood = CheckFile(value["-TREATMENT_FILE-"])
+                fileGood = CheckFile(value["-PLACEMENT_FILE-"])
 
                 if fileGood == True:
-                    csvStatus, columns = CheckPlainPlotCSV(value["-TREATMENT_FILE-"])
+                    csvStatus, columns = CheckPlainPlotCSV(value["-PLACEMENT_FILE-"])
                     if csvStatus == True:
                         try:
-                            plotContents(value["-TREATMENT_FILE-"], columns)
+                            plotContents(value["-PLACEMENT_FILE-"], columns)
                         except ValueError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
-                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                         except IndexError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
-                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
                             
                         except TypeError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
-                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
                         else:
-                            value["-ERROR_TREATMENT-"] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
-                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                            value["-ERROR_PLACEMENT-"] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                            win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                 elif fileGood == False:
-                    value["-ERROR_TREATMENT-"] = "Error:  Invalid file and voltage limit."
-                    win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                    value["-ERROR_PLACEMENT-"] = "Error:  Invalid file and voltage limit."
+                    win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
-            elif value["-TREATMENT_FILE-"] == '':
-                value["-ERROR_TREATMENT-"] = "Error:  A filepath must be entered to plot."
-                win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+            elif value["-PLACEMENT_FILE-"] == '':
+                value["-ERROR_PLACEMENT-"] = "Error:  A filepath must be entered to plot."
+                win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
         
         # TREATMENT INFORMATION WINDOW
         if event == '-TREAT_INFO-' and win2_active == False:
