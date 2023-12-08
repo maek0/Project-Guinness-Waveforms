@@ -8,6 +8,38 @@ from scipy.fftpack import fftfreq
 import matplotlib.pyplot as plt
 import datetime
 
+# def evenColumns(x,y):
+#     xN = len(x)
+#     yN = len(y)
+#     v = xN - yN
+
+#     # find any NaN values in x and y
+#     n = np.argwhere(np.isnan(x))
+#     m = np.argwhere(np.isnan(y))
+    
+#     # if x and y are somehow different lengths, cut them to the same length
+#     if v > 0:
+#         x = x[:yN]
+#     elif v < 0:
+#         y = y[:xN]
+    
+#     if n.size>0 and m.size>0:
+#         ind = max(max(n),max(m))
+#         x = x[:ind-1]
+#         y = y[:ind-1]
+#         # if there are NaN values anywhere in x or y, cut both of them down before the earliest found NaN
+#     elif n.size>0 and m.size==0:
+#         ind = max(n)
+#         x = x[:ind-1]
+#         y = y[:ind-1]
+#         # if there are NaN values anywhere in x, cut both x and y down before the earliest found NaN in x
+#     elif n.size==0 and m.size>0:
+#         ind = max(m)
+#         x = x[:ind-1]
+#         y = y[:ind-1]
+
+#     return x, y
+
 def CheckCSV(filepath):
     csvArray = np.genfromtxt(open(filepath), delimiter=",")
     rows = np.size(csvArray,0)
@@ -42,6 +74,23 @@ def CheckAudioCSV(filepath):
 
     return status
 
+def CheckPlainPlotCSV(filepath):
+    csvArray = np.genfromtxt(open(filepath), delimiter=",")
+    rows = np.size(csvArray,0)
+    columns = np.size(csvArray,1)
+
+    if columns < 2 or columns > 3:
+        status = False
+
+    else:
+        if rows < 500:
+            status = False
+            
+        else:
+            status = True
+
+    return status, columns
+
 def CheckFile(filepath):
     if os.path.exists(filepath):
 
@@ -69,8 +118,6 @@ def VoltageCheck(voltageLimit):
     
     if type(voltageLimit) == float:
 
-        # voltageLimit = int(voltageLimit)
-
         if voltageLimit > 150 or voltageLimit < 0:
             status = False
 
@@ -88,6 +135,33 @@ def VoltageCheck(voltageLimit):
         status = False
 
     return status
+
+
+def plotContents(filepath, columns):
+    datetime_rn = datetime.datetime.now()
+    str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
+    
+    csvFile = open(filepath)
+    csvArray = np.genfromtxt(csvFile, delimiter=",")
+    
+    x = csvArray[2:-2,0]
+    y = csvArray[2:-2,1]
+
+    # y = signal.detrend(y, type="constant")
+
+    plt.plot(x,y,label="Column 2 of the input file.")
+
+    if columns == 3:
+        z = csvArray[2:-2,2]
+        plt.plot(x,z,label="Column 3 of the input file.")
+    
+    plt.title("Preview plot of the input file.\n{}".format(str_datetime_rn))
+    plt.xlabel("Time")
+    plt.ylabel("Amplitude")
+    plt.xlim([min(x),max(x)])
+    plt.ylim([min(y)-1,max(y)+1])
+    plt.legend(loc="lower left")
+    plt.show()
 
 
 def linearRegression(x, y):
@@ -127,6 +201,35 @@ def guinnessRampFilter(filepath,voltageLimit):
     
     filename = os.path.basename(filepath)
     y = signal.detrend(y, type="constant")
+
+    xN = len(x)
+    yN = len(y)
+    v = xN - yN
+
+    # find any NaN values in x and y
+    n = np.argwhere(np.isnan(x))
+    m = np.argwhere(np.isnan(y))
+    
+    # if x and y are somehow different lengths, cut them to the same length
+    if v > 0:
+        x = x[:yN]
+    elif v < 0:
+        y = y[:xN]
+    
+    if n.size>0 and m.size>0:
+        ind = max(max(n),max(m))
+        x = x[:ind-1]
+        y = y[:ind-1]
+        # if there are NaN values anywhere in x or y, cut both of them down before the earliest found NaN
+    elif n.size>0 and m.size==0:
+        ind = max(n)
+        x = x[:ind-1]
+        y = y[:ind-1]
+        # if there are NaN values anywhere in x, cut both x and y down before the earliest found NaN in x
+    elif n.size==0 and m.size>0:
+        ind = max(m)
+        x = x[:ind-1]
+        y = y[:ind-1]
     
     # find the indices of the peaks of the output energy signal (not including voltage checks)
     y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=2.5,prominence=15,distance=50)
@@ -237,7 +340,6 @@ def guinnessTHD(filepath,voltageLimit):
         ind = max(m)
         x = x[:ind-1]
         y = y[:ind-1]
-        # if there are NaN values anywhere in y, cut both x and y down before the earliest found NaN in y
     
     # time step of x
     step = x[1]-x[0]
@@ -628,7 +730,9 @@ treatmentLayout = [
                 [sg.Text()],
                 [sg.Text('Voltage Limit:'), sg.Push(), sg.Input(key="-TREATMENT_VOLT-", do_not_clear=True, size=(50,3))],
                 [sg.Text()],
-                [sg.Text('', key="-ERROR_TREATMENT-", size=(70,3))],
+                [sg.Button('Plot Input File',key='-T_PLOT-')],
+                [sg.Text()],
+                [sg.Text('', key="-ERROR_TREATMENT-", size=(70,2))],
                 [sg.Text()],
                 [sg.Button('Analyze Voltage Ramp', key="-TREATMENT_RAMP-"), sg.Button('Analyze Pulse Burst', key="-TREATMENT_PULSE-"), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-TREAT_INFO-')]
                 ]
@@ -639,7 +743,9 @@ placementLayout = [
                 [sg.Text()],
                 [sg.Text('Voltage Limit:'), sg.Push(), sg.Input(key="-PLACEMENT_VOLT-", do_not_clear=True, size=(50,3))],
                 [sg.Text()],
-                [sg.Text('', key="-ERROR_PLACEMENT-", size=(70,3))],
+                [sg.Button('Plot Input File',key='-P_PLOT-')],
+                [sg.Text()],
+                [sg.Text('', key="-ERROR_PLACEMENT-", size=(70,2))],
                 [sg.Text()],
                 [sg.Button('Analyze Bipolar Pulse', key="-PLACEMENT_PULSE-"), sg.Button('Analyze Bipolar Pulse - Low Res', key="-PLACEMENT_PULSE_LOWRES-"), sg.Button('Analyze Tone Sync', key="-PLACEMENT_TONE-"), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-PLACE_INFO-')]
                 ]
@@ -670,6 +776,73 @@ while True:
         # Close application if the window is closed or if the "Exit" button is pressed
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
+
+        if event == '-T_PLOT-':
+            if value["-TREATMENT_FILE-"] != '':
+                
+                fileGood = CheckFile(value["-TREATMENT_FILE-"])
+
+                if fileGood == True:
+                    csvStatus, columns = CheckPlainPlotCSV(value["-TREATMENT_FILE-"])
+
+                    if csvStatus == True:
+                        try:
+                            plotContents(value["-TREATMENT_FILE-"], columns)
+                        except ValueError:
+                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+
+                        except IndexError:
+                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                            
+                        except TypeError:
+                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                        else:
+                            value["-ERROR_TREATMENT-"] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+
+                elif fileGood == False:
+                    value["-ERROR_TREATMENT-"] = "Error:  Invalid file and voltage limit."
+                    win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+
+            elif value["-TREATMENT_FILE-"] == '':
+                value["-ERROR_TREATMENT-"] = "Error:  A filepath must be entered to plot."
+                win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+
+        if event == '-P_PLOT-':
+            if value["-TREATMENT_FILE-"] != '':
+                
+                fileGood = CheckFile(value["-TREATMENT_FILE-"])
+
+                if fileGood == True:
+                    csvStatus, columns = CheckPlainPlotCSV(value["-TREATMENT_FILE-"])
+                    if csvStatus == True:
+                        try:
+                            plotContents(value["-TREATMENT_FILE-"], columns)
+                        except ValueError:
+                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+
+                        except IndexError:
+                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                            
+                        except TypeError:
+                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                        else:
+                            value["-ERROR_TREATMENT-"] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+
+                elif fileGood == False:
+                    value["-ERROR_TREATMENT-"] = "Error:  Invalid file and voltage limit."
+                    win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+
+            elif value["-TREATMENT_FILE-"] == '':
+                value["-ERROR_TREATMENT-"] = "Error:  A filepath must be entered to plot."
+                win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
         
         # TREATMENT INFORMATION WINDOW
         if event == '-TREAT_INFO-' and win2_active == False:
