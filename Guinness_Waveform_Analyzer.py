@@ -428,7 +428,7 @@ def lowresRiseFall(filepath,voltageLimit):
     highest_peak_index = peak_indices[np.argmax(peak_heights)]
     second_and_third_highest_peak_indices = [peak_indices[np.argpartition(peak_heights,-2)[-2]], peak_indices[np.argpartition(peak_heights,-3)[-3]]]
 
-    buff = 5
+    buff = 10
 
     first_cutoff_index = min(second_and_third_highest_peak_indices)-buff
     second_cutoff_index = max(second_and_third_highest_peak_indices)+buff
@@ -452,24 +452,49 @@ def lowresRiseFall(filepath,voltageLimit):
     
 
     ## Assigning min and max points of the pulse to variables ##
-    positive_ten_rise = x_windowed[positive_ten][0]
-    if x_windowed[0] < positive_ten_rise:
-        positive_ten_rise = x_windowed[0]
+    # positive_ten_rise = x_windowed[positive_ten][0]
+    # if x_windowed[0] < positive_ten_rise:
+    #     positive_ten_rise = x_windowed[0]
         
-    positive_ninety_rise = x_windowed[positive_ninety][0]
-    positive_ninety_fall = x_windowed[positive_ninety][-1]
+    # positive_ninety_rise = x_windowed[positive_ninety][0]
+    # positive_ninety_fall = x_windowed[positive_ninety][-1]
 
-    negative_ten_fall = x_windowed[negative_ten][-1]
-    if x_windowed[-1] > negative_ten_fall:
-        negative_ten_fall = x_windowed[-1]
+    # negative_ninety_rise = x_windowed[negative_ninety][0]
+    # negative_ninety_fall = x_windowed[negative_ninety][-1]
 
-    negative_ninety_rise = x_windowed[negative_ninety][0]
-    negative_ninety_fall = x_windowed[negative_ninety][-1]
-
+    # negative_ten_fall = x_windowed[negative_ten][-1]
+    # if x_windowed[-1] > negative_ten_fall:
+    #     negative_ten_fall = x_windowed[-1]
     
-    positive_rise_time = positive_ninety_rise-positive_ten_rise
-    switch_time = negative_ninety_rise-positive_ninety_fall
-    negative_fall_time = negative_ten_fall-negative_ninety_fall
+    positive_rise_x = [x_windowed[positive_ten][0], x_windowed[positive_ninety][0]]
+    positive_rise_y = [y_windowed[positive_ten][0], y_windowed[positive_ninety][0]]
+    
+    switch_x = [x_windowed[positive_ninety][-1],x_windowed[negative_ninety][0]]
+    switch_y = [y_windowed[positive_ninety][-1],y_windowed[negative_ninety][0]]
+    
+    negative_fall_x = [x_windowed[negative_ninety][-1],x_windowed[negative_ten][-1]]
+    negative_fall_y = [y_windowed[negative_ninety][-1],y_windowed[negative_ten][-1]]
+    
+    positive_rise_coefficients = np.polyfit(positive_rise_x,positive_rise_y,1)
+    switch_coefficients = np.polyfit(switch_x,switch_y,1)
+    negative_fall_coefficients = np.polyfit(negative_fall_x,negative_fall_y,1)
+    
+    positivePoly = np.poly1d(positive_rise_coefficients)
+    switchPoly = np.poly1d(switch_coefficients)
+    negativePoly = np.poly1d(negative_fall_coefficients)
+    
+    length = 50000
+    positiveFitX = np.linspace(x_windowed[0], x_windowed[positive_ninety][-1], length)
+    switchFitX = np.linspace(x_windowed[positive_ninety][0], x_windowed[negative_ninety][-1], length)
+    negativeFitX = np.linspace(x_windowed[negative_ninety][0], x_windowed[-1])
+    
+    positiveFitY = positivePoly(positiveFitX)
+    switchFitY = switchPoly(switchFitX)
+    negativeFitY = negativePoly(negativeFitX)
+    
+    # positive_rise_time = positive_ninety_rise-positive_ten_rise
+    # switch_time = negative_ninety_rise-positive_ninety_fall
+    # negative_fall_time = negative_ten_fall-negative_ninety_fall
     
     
     plt.plot(x_windowed,y_windowed,label="Placement therapy output", color = "blue")
@@ -477,50 +502,16 @@ def lowresRiseFall(filepath,voltageLimit):
     plt.ylabel(headers[1])
 
     delay = 0.0001
-    if negative_ten_fall != x_windowed[-1] and positive_ten_rise != x_windowed[0]:
-        points = np.array([
-                    [positive_ten_rise,y_windowed[positive_ten][0]],
-                    [positive_ninety_rise,y_windowed[positive_ninety][0]],
-                    # [positive_ten_fall,y_windowed[positive_ten][-1]],
-                    [positive_ninety_fall,y_windowed[positive_ninety][-1]],
-                    # [negative_ten_rise,y_windowed[negative_ten][0]],
-                    [negative_ninety_rise,y_windowed[negative_ninety][0]],
-                    [negative_ten_fall,y_windowed[negative_ten][-1]],
-                    [negative_ninety_fall,y_windowed[negative_ninety][-1]]
-                ])
-    elif negative_ten_fall == x_windowed[-1] and positive_ten_rise == x_windowed[0]:
-        points = np.array([
-                    [positive_ten_rise,y_windowed[0]],
-                    [positive_ninety_rise,y_windowed[positive_ninety][0]],
-                    [positive_ninety_fall,y_windowed[positive_ninety][-1]],
-                    [negative_ninety_rise,y_windowed[negative_ninety][0]],
-                    [negative_ten_fall,y_windowed[-1]],
-                    [negative_ninety_fall,y_windowed[negative_ninety][-1]]
-                ])
-    elif negative_ten_fall == x_windowed[-1] and positive_ten_rise != x_windowed[0]:
-        points = np.array([
-                    [positive_ten_rise,y_windowed[positive_ten][0]],
-                    [positive_ninety_rise,y_windowed[positive_ninety][0]],
-                    [positive_ninety_fall,y_windowed[positive_ninety][-1]],
-                    [negative_ninety_rise,y_windowed[negative_ninety][0]],
-                    [negative_ten_fall,y_windowed[-1]],
-                    [negative_ninety_fall,y_windowed[negative_ninety][-1]]
-                ])
-    elif negative_ten_fall != x_windowed[-1] and positive_ten_rise == x_windowed[0]:
-        points = np.array([
-                    [positive_ten_rise,y_windowed[0]],
-                    [positive_ninety_rise,y_windowed[positive_ninety][0]],
-                    [positive_ninety_fall,y_windowed[positive_ninety][-1]],
-                    [negative_ninety_rise,y_windowed[negative_ninety][0]],
-                    [negative_ten_fall,y_windowed[negative_ten][-1]],
-                    [negative_ninety_fall,y_windowed[negative_ninety][-1]]
-                ])
 
-    plt.scatter(points[:,0],points[:,1],marker="x",color="red")
+
+    # plt.scatter(points[:,0],points[:,1],marker="x",color="red")
+    plt.plot(positiveFitX,positiveFitY)
+    plt.plot(switchFitX,switchFitY)
+    plt.plot(negativeFitX,negativeFitY)
     
-    one_mark = x_windowed[-1]/second_and_third_highest_peak_indices[0]
-    two_mark = x_windowed[-1]/highest_peak_index
-    three_mark = x_windowed[-1]/second_and_third_highest_peak_indices[1]
+    one_mark = second_and_third_highest_peak_indices[0]/x_windowed[-1]
+    two_mark = highest_peak_index/x_windowed[-1]
+    three_mark = second_and_third_highest_peak_indices[1]/x_windowed[-1]
 
     plt.axhline(ten, xmin=one_mark, xmax=two_mark, label = "10% of set voltage, {:.2f}V".format(ten), linestyle = "--", color = "magenta")
     plt.axhline(ninety, xmin=one_mark, xmax=two_mark, label = "90% of set voltage, {:.2f}V".format(ninety), linestyle = "--", color = "green")
@@ -529,11 +520,11 @@ def lowresRiseFall(filepath,voltageLimit):
 
     microsecond = 1000000
     
-    plt.text(positive_ten_rise-delay,half,"Rise time: {:.4f} $\mu$s".format(positive_rise_time*microsecond),fontsize="small")
-    # plt.text(positive_ninety_fall+delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
-    plt.text(positive_ninety_fall+delay,half,"Time: {:.4f} $\mu$s".format(switch_time*microsecond),fontsize="small")
-    # plt.text(negative_ten_rise-delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
-    plt.text(negative_ninety_fall+delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
+    # plt.text(positive_ten_rise-delay,half,"Rise time: {:.4f} $\mu$s".format(positive_rise_time*microsecond),fontsize="small")
+    # # plt.text(positive_ninety_fall+delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
+    # plt.text(positive_ninety_fall+delay,half,"Time: {:.4f} $\mu$s".format(switch_time*microsecond),fontsize="small")
+    # # plt.text(negative_ten_rise-delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
+    # plt.text(negative_ninety_fall+delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
     
     plt.text(min(x_windowed)+delay/2,max(y_windowed)+0.9,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
     
