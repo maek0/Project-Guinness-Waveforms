@@ -428,7 +428,8 @@ def lowresRiseFall(filepath,voltageLimit):
     highest_peak_index = peak_indices[np.argmax(peak_heights)]
     second_and_third_highest_peak_indices = [peak_indices[np.argpartition(peak_heights,-2)[-2]], peak_indices[np.argpartition(peak_heights,-3)[-3]]]
 
-    buff = 10
+    buff = 5
+    delay = 0.0001
 
     first_cutoff_index = min(second_and_third_highest_peak_indices)-buff
     second_cutoff_index = max(second_and_third_highest_peak_indices)+buff
@@ -484,9 +485,9 @@ def lowresRiseFall(filepath,voltageLimit):
     negativePoly = np.poly1d(negative_fall_coefficients)
     
     length = 50000
-    positiveFitX = np.linspace(x_windowed[0], x_windowed[positive_ninety][-1], length)
+    positiveFitX = np.linspace(x_windowed[0]-delay, x_windowed[positive_ninety][-1], length)
     switchFitX = np.linspace(x_windowed[positive_ninety][0], x_windowed[negative_ninety][-1], length)
-    negativeFitX = np.linspace(x_windowed[negative_ninety][0], x_windowed[-1])
+    negativeFitX = np.linspace(x_windowed[negative_ninety][0], x_windowed[-1]+delay,length)
     
     positiveFitY = positivePoly(positiveFitX)
     switchFitY = switchPoly(switchFitX)
@@ -500,8 +501,6 @@ def lowresRiseFall(filepath,voltageLimit):
     plt.plot(x_windowed,y_windowed,label="Placement therapy output", color = "blue")
     plt.xlabel(headers[0])
     plt.ylabel(headers[1])
-
-    delay = 0.0001
 
 
     # plt.scatter(points[:,0],points[:,1],marker="x",color="red")
