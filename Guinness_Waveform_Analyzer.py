@@ -467,7 +467,7 @@ def lowresRiseFall(filepath,voltageLimit):
     switchPoly = np.poly1d(switch_coefficients)
     negativePoly = np.poly1d(negative_fall_coefficients)
     
-    length = 50000
+    length = 100000
     positiveFitX = np.linspace(x_windowed[0]-delay, x_windowed[positive_ninety][-1], length)
     switchFitX = np.linspace(x_windowed[positive_ninety][0], x_windowed[negative_ninety][-1], length)
     negativeFitX = np.linspace(x_windowed[negative_ninety][0], x_windowed[-1]+delay,length)
@@ -493,22 +493,23 @@ def lowresRiseFall(filepath,voltageLimit):
     switch_time = negative_ninety_rise-positive_ninety_fall
     negative_fall_time = negative_ten_fall-negative_ninety_fall
     
+    points = np.array([
+                    [positive_ten_rise, positiveFitY[np.where(positiveFitY>=ten)][0]],
+                    [positive_ninety_rise, positiveFitY[np.where(positiveFitY>=ninety)][0]],
+                    [positive_ninety_fall, switchFitY[np.where(switchFitY<=ninety)][0]],
+                    [negative_ninety_rise, switchFitY[np.where(switchFitY<=-ninety)][0]],
+                    [negative_ninety_fall, negativeFitY[np.where(negativeFitY>=-ninety)][0]],
+                    [negative_ten_fall, negativeFitY[np.where(negativeFitY>=-ten)][0]]
+                ])
     
-    points = [
-                positive_ten_rise, positiveFitY[np.where(positiveFitY>=ten)][0],
-                positive_ninety_rise, positiveFitY[np.where(positiveFitY>=ninety)][0],
-                positive_ninety_fall, switchFitY[np.where(switchFitY<=ninety)][0],
-                negative_ninety_rise, switchFitY[np.where(switchFitY<=-ninety)][0],
-                negative_ninety_fall, negativeFitY[np.where(negativeFitY>=-ninety)][0],
-                negative_ten_fall, negativeFitY[np.where(negativeFitY>=-ten)][0]]
-    print(points)
+    # print(points)
     
     plt.plot(x_windowed,y_windowed,label="Placement therapy output", color = "blue")
     plt.xlabel(headers[0])
     plt.ylabel(headers[1])
 
 
-    # plt.scatter(points[:,0],points[:,1],marker="x",color="red")
+    plt.scatter(points[:,0],points[:,1],marker="x",color="red")
     plt.plot(positiveFitX,positiveFitY)
     plt.plot(switchFitX,switchFitY)
     plt.plot(negativeFitX,negativeFitY)
