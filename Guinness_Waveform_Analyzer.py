@@ -395,7 +395,7 @@ def guinnessTHD(filepath,voltageLimit):
     # display the plot
     plt.show()
 
-def lowresRiseFall(filepath,voltageLimit):
+def calcRiseFall(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
     
@@ -467,7 +467,7 @@ def lowresRiseFall(filepath,voltageLimit):
     switchPoly = np.poly1d(switch_coefficients)
     negativePoly = np.poly1d(negative_fall_coefficients)
     
-    length = 100000
+    length = 500000
     positiveFitX = np.linspace(x_windowed[0]-delay, x_windowed[positive_ninety][-1], length)
     switchFitX = np.linspace(x_windowed[positive_ninety][0], x_windowed[negative_ninety][-1], length)
     negativeFitX = np.linspace(x_windowed[negative_ninety][0], x_windowed[-1]+delay,length)
@@ -545,112 +545,6 @@ def lowresRiseFall(filepath,voltageLimit):
     # display the plot
     plt.show()
 
-def normalRiseFall(filepath,voltageLimit):
-    datetime_rn = datetime.datetime.now()
-    str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
-    
-    headers = ["Time", "Voltage"]
-    csvFile = open(filepath)
-    csvArray = np.genfromtxt(csvFile, delimiter=",")
-    x_ = csvArray[2:-2,0]
-    y_ = csvArray[2:-2,1]
-
-    x,y = evenColumns(x_,y_)
-    
-    filename = os.path.basename(filepath)
-    y = signal.detrend(y, type="constant")
-
-    y_diff2 = np.gradient(np.gradient(y))
-    peak_indices, peak_info = signal.find_peaks(y_diff2,height=0.05)
-
-    peak_heights = peak_info['peak_heights']
-
-    highest_peak_index = peak_indices[np.argmax(peak_heights)]
-    second_and_third_highest_peak_indices = [peak_indices[np.argpartition(peak_heights,-2)[-2]], peak_indices[np.argpartition(peak_heights,-3)[-3]]]
-
-    buff = 200
-
-    first_cutoff_index = min(second_and_third_highest_peak_indices)-buff
-    second_cutoff_index = max(second_and_third_highest_peak_indices)+buff
-
-    y_windowed = y[first_cutoff_index:second_cutoff_index]
-    x_windowed = x[first_cutoff_index:second_cutoff_index]
-
-    # plt.plot(x_windowed,y_windowed)
-    # plt.show()
-
-    ten = 0.1*float(voltageLimit)
-    ninety = 0.9*float(voltageLimit)
-    half = 0.5*float(voltageLimit)
-    
-    positive_ten = np.where(y_windowed>=ten)
-    positive_ninety = np.where(y_windowed>=ninety)
-    negative_ten = np.where(y_windowed<=-ten)
-    negative_ninety = np.where(y_windowed<=-ninety)
-    
-    positive_ten_rise = x_windowed[positive_ten][0]
-    positive_ten_fall = x_windowed[positive_ten][-1]
-    positive_ninety_rise = x_windowed[positive_ninety][0]
-    positive_ninety_fall = x_windowed[positive_ninety][-1]
-    negative_ten_rise = x_windowed[negative_ten][0]
-    negative_ten_fall = x_windowed[negative_ten][-1]
-    negative_ninety_rise = x_windowed[negative_ninety][0]
-    negative_ninety_fall = x_windowed[negative_ninety][-1]
-    
-    positive_rise_time = positive_ninety_rise-positive_ten_rise
-    positive_fall_time = positive_ten_fall-positive_ninety_fall
-    
-    negative_rise_time = negative_ninety_rise-negative_ten_rise
-    negative_fall_time = negative_ten_fall-negative_ninety_fall
-    
-    plt.plot(x_windowed,y_windowed,label="Placement therapy output", color = "blue")
-    plt.xlabel(headers[0])
-    plt.ylabel(headers[1])
-
-    delay = 0.0001
-    points = np.array([
-                [positive_ten_rise,y_windowed[positive_ten][0]],
-                [positive_ninety_rise,y_windowed[positive_ninety][0]],
-                [positive_ten_fall,y_windowed[positive_ten][-1]],
-                [positive_ninety_fall,y_windowed[positive_ninety][-1]],
-                [negative_ten_rise,y_windowed[negative_ten][0]],
-                [negative_ninety_rise,y_windowed[negative_ninety][0]],
-                [negative_ten_fall,y_windowed[negative_ten][-1]],
-                [negative_ninety_fall,y_windowed[negative_ninety][-1]]
-            ])
-
-    plt.scatter(points[:,0],points[:,1],marker="x",color="red")
-    
-    # one_mark = x_windowed[-1]/second_and_third_highest_peak_indices[0]
-    # two_mark = x_windowed[-1]/highest_peak_index
-    # three_mark = x_windowed[-1]/second_and_third_highest_peak_indices[1]
-    one_mark = 0
-    two_mark = 0.6
-    three_mark = 0.4
-    four_mark = 1
-
-    plt.axhline(ten, xmin=one_mark, xmax=two_mark, label = "10% of set voltage, (+/-) {:.2f}V".format(ten), linestyle = "--", color = "magenta")
-    plt.axhline(ninety, xmin=one_mark, xmax=two_mark, label = "90% of set voltage, (+/-) {:.2f}V".format(ninety), linestyle = "--", color = "green")
-    plt.axhline(-ten, xmin=three_mark, xmax=four_mark, linestyle = "--", color = "magenta")
-    plt.axhline(-ninety, xmin=three_mark, xmax=four_mark, linestyle = "--", color = "green")
-    
-    microsecond = 1000000
-    
-    plt.text(positive_ten_rise+delay,half,"Rise time: {:.4f} $\mu$s".format(positive_rise_time*microsecond),fontsize="small")
-    plt.text(positive_ninety_fall-2*delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
-    plt.text(negative_ten_rise+delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
-    plt.text(negative_ninety_fall-2*delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
-    
-    plt.text(min(x_windowed)+delay/2,max(y_windowed)+0.9,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
-    
-    # plotting options
-    plt.title("Guinness Generator Placement Bipolar Pulse\nSet Voltage = {}V, Input file name: '{}'".format(voltageLimit, filename))
-    # plt.xlim(min(x_windowed),max(x_windowed))
-    plt.ylim(min(y_windowed)-1,max(y_windowed)+1)
-    plt.legend(loc="upper right")
-
-    # display the plot
-    plt.show()
 
 def guinnessAudioSync(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
@@ -750,7 +644,7 @@ placementLayout = [
                 [sg.Text()],
                 [sg.Text('', key="-ERROR_PLACEMENT-", size=(70,2))],
                 [sg.Text()],
-                [sg.Button('Analyze Bipolar Pulse', key="-PLACEMENT_PULSE-"), sg.Button('Analyze Bipolar Pulse - Low Res', key="-PLACEMENT_PULSE_LOWRES-"), sg.Button('Analyze Tone Sync', key="-PLACEMENT_TONE-"), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-PLACE_INFO-')]
+                [sg.Button('Analyze Bipolar Pulse', key="-PLACEMENT_PULSE-"), sg.Button('Analyze Tone Sync', key="-PLACEMENT_TONE-"), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-PLACE_INFO-')]
                 ]
 
 layout_win1 = [
@@ -1014,56 +908,7 @@ while True:
 
                     if csvGood == True:
                         try:
-                            normalRiseFall(value["-PLACEMENT_FILE-"], value["-PLACEMENT_VOLT-"])
-                        except ValueError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
-                            win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
-
-                        except IndexError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
-                            win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
-                            
-                        except TypeError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
-                            win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
-                    else:
-                        value["-ERROR_PLACEMENT-"] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
-                        win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
-
-                elif fileGood == False and voltageGood == True:
-                    value["-ERROR_PLACEMENT-"] = "Error:  Invalid filepath or filetype. Input must be a .csv file"
-                    win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
-
-                elif fileGood == True and voltageGood == False:
-                    csvGood = CheckCSV(value["-PLACEMENT_FILE-"])
-
-                    if csvGood == True:
-                        value["-ERROR_PLACEMENT-"] = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
-                        win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
-                    else:
-                        value["-ERROR_PLACEMENT-"] = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nError:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
-                        win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
-
-                elif fileGood == False and voltageGood == False:
-                    value["-ERROR_PLACEMENT-"] = "Error:  Invalid file and voltage limit."
-                    win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
-            
-            elif value["-PLACEMENT_FILE-"] == '' or value["-PLACEMENT_VOLT-"] == '':
-                value["-ERROR_PLACEMENT-"] = "Error:  Both the filepath and voltage limit must be entered."
-                win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
-
-        if event == "-PLACEMENT_PULSE_LOWRES-":
-            if value["-PLACEMENT_FILE-"] != '' and value["-PLACEMENT_VOLT-"] != '':
-                
-                fileGood = CheckFile(value["-PLACEMENT_FILE-"])
-                voltageGood = VoltageCheck(value["-PLACEMENT_VOLT-"])
-
-                if fileGood == True and voltageGood == True:
-                    csvGood = CheckCSV(value["-PLACEMENT_FILE-"])
-
-                    if csvGood == True:
-                        try:
-                            lowresRiseFall(value["-PLACEMENT_FILE-"], value["-PLACEMENT_VOLT-"])
+                            calcRiseFall(value["-PLACEMENT_FILE-"], value["-PLACEMENT_VOLT-"])
                         except ValueError:
                             value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
