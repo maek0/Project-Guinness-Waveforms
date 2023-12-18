@@ -425,11 +425,11 @@ def calcRiseFall(filepath,voltageLimit):
 
     peak_heights = peak_info['peak_heights']
 
-    highest_peak_index = peak_indices[np.argmax(peak_heights)]
+    # highest_peak_index = peak_indices[np.argmax(peak_heights)]
     second_and_third_highest_peak_indices = [peak_indices[np.argpartition(peak_heights,-2)[-2]], peak_indices[np.argpartition(peak_heights,-3)[-3]]]
 
     buff = 5
-    delay = 0.0001
+    delay = 0.00005
 
     first_cutoff_index = min(second_and_third_highest_peak_indices)-buff
     second_cutoff_index = max(second_and_third_highest_peak_indices)+buff
@@ -482,6 +482,9 @@ def calcRiseFall(filepath,voltageLimit):
     
     positive_ninety_rise = positiveFitX[np.where(positiveFitY>=ninety)][0]
     positive_ninety_fall = switchFitX[np.where(switchFitY<=ninety)][0]
+    
+    positive_ten_fall = switchFitX[np.where(switchFitY<=ten)][0]
+    negative_ten_rise = switchFitX[np.where(switchFitY<=-ten)][0]
 
     negative_ninety_rise = switchFitX[np.where(switchFitY<=-ninety)][0]
     negative_ninety_fall = negativeFitX[np.where(negativeFitY>=-ninety)][0]
@@ -490,56 +493,74 @@ def calcRiseFall(filepath,voltageLimit):
     
     
     positive_rise_time = positive_ninety_rise-positive_ten_rise
-    switch_time = negative_ninety_rise-positive_ninety_fall
+    positive_fall_time = positive_ten_fall-positive_ninety_fall
+    # switch_time = negative_ninety_rise-positive_ninety_fall
+    negative_rise_time = negative_ninety_rise-negative_ten_rise
     negative_fall_time = negative_ten_fall-negative_ninety_fall
     
     points = np.array([
                     [positive_ten_rise, positiveFitY[np.where(positiveFitY>=ten)][0]],
                     [positive_ninety_rise, positiveFitY[np.where(positiveFitY>=ninety)][0]],
                     [positive_ninety_fall, switchFitY[np.where(switchFitY<=ninety)][0]],
+                    [positive_ten_fall, switchFitY[np.where(switchFitY<=ten)][0]],
+                    [negative_ten_rise, switchFitY[np.where(switchFitY<=-ten)][0]],
                     [negative_ninety_rise, switchFitY[np.where(switchFitY<=-ninety)][0]],
                     [negative_ninety_fall, negativeFitY[np.where(negativeFitY>=-ninety)][0]],
                     [negative_ten_fall, negativeFitY[np.where(negativeFitY>=-ten)][0]]
                 ])
-    
-    # print(points)
+
+    # line_markers = np.array([
+    #                 [x_windowed[positive_ten][0], y_windowed[positive_ten][0]],
+    #                 [x_windowed[positive_ninety][0], y_windowed[positive_ninety][0]],
+    #                 [x_windowed[positive_ninety][-1], y_windowed[positive_ninety][-1]],
+    #                 [x_windowed[negative_ninety][0], y_windowed[negative_ninety][0]],
+    #                 [x_windowed[negative_ninety][-1], y_windowed[negative_ninety][-1]],
+    #                 [x_windowed[negative_ten][-1], y_windowed[negative_ten][-1]]
+    #             ])
+    # plt.scatter(line_markers[:,0],line_markers[:,1],marker="o",color="green",s=50)
     
     plt.plot(x_windowed,y_windowed,label="Placement therapy output", color = "blue")
+    plt.plot(x,y,color = "blue")
     plt.xlabel(headers[0])
     plt.ylabel(headers[1])
 
-
-    plt.scatter(points[:,0],points[:,1],marker="x",color="red")
     plt.plot(positiveFitX,positiveFitY)
     plt.plot(switchFitX,switchFitY)
     plt.plot(negativeFitX,negativeFitY)
     
-    one_mark = 0.05
+    one_mark = 0.1
     two_mark = 0.55
     three_mark = 0.45
-    four_mark = 0.95
+    four_mark = 0.9
 
     plt.axhline(ten, xmin=one_mark, xmax=two_mark, label = "10% of set voltage, (+/-) {:.2f}V".format(ten), linestyle = "--", color = "magenta")
     plt.axhline(ninety, xmin=one_mark, xmax=two_mark, label = "90% of set voltage, (+/-) {:.2f}V".format(ninety), linestyle = "--", color = "green")
     plt.axhline(-ten, xmin=three_mark, xmax=four_mark, linestyle = "--", color = "magenta")
     plt.axhline(-ninety, xmin=three_mark, xmax=four_mark, linestyle = "--", color = "green")
     
+    plt.scatter(points[:,0],points[:,1],marker="x",color="red", s=50, label="Rise and Fall markers")
+    
     plt.axhline(0, label = "Origin (0V)", color = "black")
 
     microsecond = 1000000
     
-    plt.text(positive_ten_rise-delay,half,"Rise time: {:.4f} $\mu$s".format(positive_rise_time*microsecond),fontsize="small")
-    # plt.text(positive_ninety_fall+delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
-    plt.text(positive_ninety_fall+delay,half,"Time: {:.4f} $\mu$s".format(switch_time*microsecond),fontsize="small")
-    # plt.text(negative_ten_rise-delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
+    plt.text(positive_ten_rise+delay,half,"Rise time: {:.4f} $\mu$s".format(positive_rise_time*microsecond),fontsize="small")
+    plt.text(positive_ninety_fall+delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
+    # plt.text(positive_ninety_rise+delay,ten,"Time: {:.4f} $\mu$s".format(switch_time*microsecond),fontsize="small")
+    plt.text(negative_ten_rise+delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
     plt.text(negative_ninety_fall+delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
     
     plt.text(min(x_windowed)+delay/2,max(y_windowed)+0.9,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
     
     # plotting options
     plt.title("Guinness Generator Placement Bipolar Pulse\nSet Voltage = {}V, Input file name: '{}'".format(voltageLimit, filename))
-    # plt.xlim(min(x_windowed),max(x_windowed))
-    plt.ylim(min(y_windowed)-1,max(y_windowed)+1)
+    
+    xscale = x[min([first_cutoff_index,len(x)-second_cutoff_index])]-x[0]
+    plt.xlim(x[first_cutoff_index]-xscale, x[second_cutoff_index]+xscale)
+    
+    yscale = float(voltageLimit)/5.0
+    plt.ylim(min(y_windowed)-yscale,max(y_windowed)+yscale)
+    
     plt.legend(loc="upper right")
 
     # display the plot
