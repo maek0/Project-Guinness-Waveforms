@@ -1032,3 +1032,11 @@ pyinstaller my_program.py
 
 You will be left with a single file, my_program.exe, located in a folder named dist under the folder where you executed the pyinstaller command.
 '''
+
+'''
+OR:
+pip install pysimplegui-exemaker
+
+then:
+python -m pysimplegui-exemaker.pysimplegui-exemaker
+'''
