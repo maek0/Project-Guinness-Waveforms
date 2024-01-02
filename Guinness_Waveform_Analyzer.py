@@ -8,6 +8,8 @@ from scipy.fftpack import fftfreq
 import matplotlib.pyplot as plt
 import datetime
 
+toolVersion = "101A"
+
 def evenColumns(x,y):
     xN = len(x)
     yN = len(y)
@@ -228,35 +230,6 @@ def guinnessRampFilter(filepath,voltageLimit):
     
     filename = os.path.basename(filepath)
     y = signal.detrend(y, type="constant")
-
-    # xN = len(x)
-    # yN = len(y)
-    # v = xN - yN
-
-    # # find any NaN values in x and y
-    # n = np.argwhere(np.isnan(x))
-    # m = np.argwhere(np.isnan(y))
-    
-    # # if x and y are somehow different lengths, cut them to the same length
-    # if v > 0:
-    #     x = x[:yN]
-    # elif v < 0:
-    #     y = y[:xN]
-    
-    # if n.size>0 and m.size>0:
-    #     ind = max(max(n),max(m))
-    #     x = x[:ind-1]
-    #     y = y[:ind-1]
-    #     # if there are NaN values anywhere in x or y, cut both of them down before the earliest found NaN
-    # elif n.size>0 and m.size==0:
-    #     ind = max(n)
-    #     x = x[:ind-1]
-    #     y = y[:ind-1]
-    #     # if there are NaN values anywhere in x, cut both x and y down before the earliest found NaN in x
-    # elif n.size==0 and m.size>0:
-    #     ind = max(m)
-    #     x = x[:ind-1]
-    #     y = y[:ind-1]
     
     # find the indices of the peaks of the output energy signal (not including voltage checks)
     y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=2.5,prominence=15,distance=350)
@@ -300,24 +273,24 @@ def guinnessRampFilter(filepath,voltageLimit):
     # plot the voltage peaks of the ramping signal
     plt.scatter(fiveVoltRampX,fiveVoltRampY, color = 'green')
     plt.scatter(twoVoltRampX,twoVoltRampY, color = 'orange')
+    
+    # mark the first peak of the output energy signal on the plot
+    plt.plot(first_peakX,first_peakY, "x", color = "red", label = "First Peak = {:.2f}V".format(first_peakY), markersize = 8, markeredgewidth = 2)
 
     # plotting the 66%(voltage limit)
-    plt.axhline(cutoff, label = "{:.2f}V".format(cutoff), linestyle = "--", color = "black")
+    plt.axhline(cutoff, label = "66% Voltage Limit = {:.2f}V".format(cutoff), linestyle = "--", color = "black")
     
     # plotting options
     plt.title("Guinness Generator Output Ramp, Voltage Limit = {}V\nInput file name: '{}'".format(voltageLimit, filename))
-    plt.text(min(x)+1,max(y)-3,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
+    plt.text(min(x)+1,max(y)-3,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
     plt.xlabel(headers[0])
     plt.ylabel(headers[1])
     
     # plot the best fit line for the ramping section BEFORE reaching 66%(voltage limit)
-    plt.plot(fiveVoltRampX, fiveV_fit, color = 'green', label = "y = {:.2f}x + {:.2f}\n$R^2$ = {:.2f}".format(fiveV_slope[0], fiveV_intercept, fiveV_rsq))
+    plt.plot(fiveVoltRampX, fiveV_fit, color = 'green', label = "1st Segment: y = {:.2f}x + {:.2f}\n$R^2$ = {:.2f}".format(fiveV_slope[0], fiveV_intercept, fiveV_rsq))
     
     # plot the best fit line for the ramping section AFTER reaching 66%(voltage limit)
-    plt.plot(twoVoltRampX, twoV_fit, color = 'orange', label = "y = {:.2f}x + {:.2f}\n$R^2$ = {:.2f}".format(twoV_slope[0], twoV_intercept, twoV_rsq))
-    
-    # mark the first peak of the output energy signal on the plot
-    plt.plot(first_peakX,first_peakY, "x", color = "black", label = "First Peak = {:.2f}V".format(first_peakY), markersize = 8, markeredgewidth = 2)
+    plt.plot(twoVoltRampX, twoV_fit, color = 'orange', label = "2nd Segment: y = {:.2f}x + {:.2f}\n$R^2$ = {:.2f}".format(twoV_slope[0], twoV_intercept, twoV_rsq))
 
     # plotting options
     plt.xlim(min(x),max(x))
@@ -344,33 +317,6 @@ def guinnessTHD(filepath,voltageLimit):
     y = signal.detrend(y, type="constant")
 
     xN = len(x)
-    # yN = len(y)
-    # v = xN - yN
-
-    # # find any NaN values in x and y
-    # n = np.argwhere(np.isnan(x))
-    # m = np.argwhere(np.isnan(y))
-    
-    # # if x and y are somehow different lengths, cut them to the same length
-    # if v > 0:
-    #     x = x[:yN]
-    # elif v < 0:
-    #     y = y[:xN]
-    
-    # if n.size>0 and m.size>0:
-    #     ind = max(max(n),max(m))
-    #     x = x[:ind-1]
-    #     y = y[:ind-1]
-    #     # if there are NaN values anywhere in x or y, cut both of them down before the earliest found NaN
-    # elif n.size>0 and m.size==0:
-    #     ind = max(n)
-    #     x = x[:ind-1]
-    #     y = y[:ind-1]
-    #     # if there are NaN values anywhere in x, cut both x and y down before the earliest found NaN in x
-    # elif n.size==0 and m.size>0:
-    #     ind = max(m)
-    #     x = x[:ind-1]
-    #     y = y[:ind-1]
     
     # time step of x
     step = x[1]-x[0]
@@ -396,7 +342,7 @@ def guinnessTHD(filepath,voltageLimit):
 
     # plotting the fft
     plt.plot(xf, yf_plottable, label = "FFT of the Pulse Burst")
-    plt.text(min(x)+1,max(y)-3,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
+    plt.text(min(x)+1,max(y)-3,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
     plt.xlabel("Frequency Bins")
     plt.ylabel(headers[1])
 
@@ -577,7 +523,7 @@ def calcRiseFall(filepath,voltageLimit):
     plt.text(negative_ten_rise+delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
     plt.text(negative_ninety_fall+delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
     
-    plt.text(min(x_windowed)+delay/2,max(y_windowed)+0.9,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
+    plt.text(min(x_windowed)+delay/2,max(y_windowed)+0.9,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
     
     # plotting options
     plt.title("Guinness Generator Placement Bipolar Pulse\nSet Voltage = {}V, Input file name: '{}'".format(voltageLimit, filename))
@@ -645,7 +591,7 @@ def guinnessAudioSync(filepath,voltageLimit):
     plt.scatter(x[audio_peakIndices],audio_peakHeights,marker="x",color="red", s=50,label="Audio Tone(s)")
 
     # tool name
-    plt.text(min(x)+0.1,max(place)+0.5,"ST-0001-066-101A, {}".format(str_datetime_rn),fontsize="small")
+    plt.text(min(x)+0.1,max(place)+0.5,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
 
     # plotting options
     plt.title("Guinness Generator Placement Output and Audio Tones\nSet Voltage = {}V, Input File Name = '{}'\nAverage Tone Delay = {:.4f} seconds".format(voltageLimit, filename, average_delay))
