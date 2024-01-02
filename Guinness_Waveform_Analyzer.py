@@ -108,7 +108,7 @@ def CheckFile(filepath):
 
     return status
 
-def VoltageCheck(voltageLimit):
+def treatmentVoltageCheck(voltageLimit):
     try:
         voltageLimit = float(voltageLimit)
 
@@ -128,6 +128,33 @@ def VoltageCheck(voltageLimit):
             status = False
 
         elif voltageLimit <= 150 and voltageLimit >= 0:
+            status = True
+
+    else:
+        status = False
+
+    return status
+
+def placementVoltageCheck(voltageLimit):
+    try:
+        voltageLimit = float(voltageLimit)
+
+    except ValueError:
+        status = False
+    
+    if type(voltageLimit) == float:
+
+        if voltageLimit > 5 or voltageLimit < 0:
+            status = False
+
+        elif voltageLimit <= 5 and voltageLimit >= 0:
+            status = True
+        
+    elif type(voltageLimit) == int:
+        if voltageLimit > 5 or voltageLimit < 0:
+            status = False
+
+        elif voltageLimit <= 5 and voltageLimit >= 0:
             status = True
 
     else:
@@ -680,6 +707,20 @@ win3_active = False
 info_txt_width = 138
 info_txt_size = 9
 
+
+# ERROR MESSAGES
+incompatible_contents = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+unexpected_contents = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+invalid_path_or_type = "Error:  Invalid filepath or filetype. Input must be a .csv file."
+invalid_treatment_V = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
+invalid_treatment_V_and_File = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nError:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+invalid_placement_V = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 5."
+invalid_placement_V_and_File = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 5.\n\nError:  Input file contains unexpected contents."
+bothInvalid = "Error:  Invalid file and voltage limit."
+bothEmpty = "Error:  Both the filepath and voltage limit must be entered."
+needFileToPlot = "Error:  A filepath must be entered to plot."
+
+
 while True:
     try:
         event, value = win1.read(timeout=2000)
@@ -707,26 +748,26 @@ while True:
                         try:
                             plotContents(value["-TREATMENT_FILE-"], columns)
                         except ValueError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
                             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
                         except IndexError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
                             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
                             
                         except TypeError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
                             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
                         else:
-                            value["-ERROR_TREATMENT-"] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                            value["-ERROR_TREATMENT-"] = unexpected_contents
                             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
                 elif fileGood == False:
-                    value["-ERROR_TREATMENT-"] = "Error:  Invalid file and voltage limit."
+                    value["-ERROR_TREATMENT-"] = bothInvalid
                     win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
             elif value["-TREATMENT_FILE-"] == '':
-                value["-ERROR_TREATMENT-"] = "Error:  A filepath must be entered to plot."
+                value["-ERROR_TREATMENT-"] = needFileToPlot
                 win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
         if event == '-P_PLOT-':
@@ -740,26 +781,26 @@ while True:
                         try:
                             plotContents(value["-PLACEMENT_FILE-"], columns)
                         except ValueError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_PLACEMENT-"] = incompatible_contents
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                         except IndexError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_PLACEMENT-"] = incompatible_contents
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
                             
                         except TypeError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_PLACEMENT-"] = incompatible_contents
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
                         else:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                            value["-ERROR_PLACEMENT-"] = unexpected_contents
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                 elif fileGood == False:
-                    value["-ERROR_PLACEMENT-"] = "Error:  Invalid file and voltage limit."
+                    value["-ERROR_PLACEMENT-"] = bothInvalid
                     win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
             elif value["-PLACEMENT_FILE-"] == '':
-                value["-ERROR_PLACEMENT-"] = "Error:  A filepath must be entered to plot."
+                value["-ERROR_PLACEMENT-"] = needFileToPlot
                 win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
         
         # TREATMENT INFORMATION WINDOW
@@ -773,7 +814,7 @@ while True:
                            [sg.Text("This button will take the treatment waveform input and look for the lines of best fit of the voltage ramp; this is done piecewise as the Guinness Generator should ramp at a different rate before and after the output voltage reaches 66% of the set voltage limit. For this function to work properly, the input .csv file should capture the voltage ramp of the Guinness Generator from 0V to the set Voltage Limit. For this function to work as intended, the input waveform should resemble the following:", size=(info_txt_width,None), font=('None',info_txt_size))],
                            [sg.Push(), sg.Image(voltage_ramp_example), sg.Push()],
                            [sg.Text("\nAnalyze Bipolar Pulse", font=('None',info_txt_size+1,'underline'))],
-                           [sg.Text("This button will take the treatment waveform input and tranform it into the frequency domain via the Fourier Transform. Frequency will be plotted against amplitude; the more the frequency is present, the higher the plotted amplitude. These frequency amplitudes are used to calculate the Total Harmonic Distortion (THD) per the following equation:", size=(info_txt_width,None), font=('None',info_txt_size))],
+                           [sg.Text("This button will take the treatment waveform input and tranform it into the frequency domain via the Fourier Transform. Frequency will be plotted against amplitude; the more that a frequency is present, the higher its plotted amplitude. These frequency amplitudes are used to calculate the Total Harmonic Distortion (THD) per the following equation:", size=(info_txt_width,None), font=('None',info_txt_size))],
                            [sg.Push(), sg.Image(THD_eq), sg.Push()],
                            [sg.Text("For this function to work as intended, the input waveform should be of the pulse burst and resemble the following:", size=(info_txt_width,None), font=('None',info_txt_size))],
                            [sg.Push(), sg.Image(pulse_burst_example), sg.Push()],
@@ -822,7 +863,7 @@ while True:
             if value["-TREATMENT_FILE-"] != '' and value["-TREATMENT_VOLT-"] != '':
                 
                 fileGood = CheckFile(value["-TREATMENT_FILE-"])
-                voltageGood = VoltageCheck(value["-TREATMENT_VOLT-"])
+                voltageGood = treatmentVoltageCheck(value["-TREATMENT_VOLT-"])
 
                 if fileGood == True and voltageGood == True:
                     csvGood = CheckCSV(value["-TREATMENT_FILE-"])
@@ -831,40 +872,40 @@ while True:
                         try:
                             guinnessRampFilter(value["-TREATMENT_FILE-"], value["-TREATMENT_VOLT-"])
                         except ValueError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
                             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
                         except IndexError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
                             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
                             
                         except TypeError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
                             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
                     else:
-                        value["-ERROR_TREATMENT-"] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        value["-ERROR_TREATMENT-"] = unexpected_contents
                         win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
                 elif fileGood == False and voltageGood == True:
-                    value["-ERROR_TREATMENT-"] = "Error:  Invalid filepath or filetype. Input must be a .csv file"
+                    value["-ERROR_TREATMENT-"] = invalid_path_or_type
                     win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
                 elif fileGood == True and voltageGood == False:
                     csvGood = CheckCSV(value["-TREATMENT_FILE-"])
 
                     if csvGood == True:
-                        value["-ERROR_TREATMENT-"] = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
+                        value["-ERROR_TREATMENT-"] = invalid_treatment_V
                         win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
                     else:
-                        value["-ERROR_TREATMENT-"] = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nError:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        value["-ERROR_TREATMENT-"] = invalid_treatment_V_and_File
                         win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
                 elif fileGood == False and voltageGood == False:
-                    value["-ERROR_TREATMENT-"] = "Error:  Invalid file and voltage limit."
+                    value["-ERROR_TREATMENT-"] = bothInvalid
                     win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
             elif value["-TREATMENT_FILE-"] == '' or value["-TREATMENT_VOLT-"] == '':
-                value["-ERROR_TREATMENT-"] = "Error:  Both the filepath and voltage limit must be entered."
+                value["-ERROR_TREATMENT-"] = bothEmpty
                 win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
 
@@ -872,7 +913,7 @@ while True:
             if value["-TREATMENT_FILE-"] != '' and value["-TREATMENT_VOLT-"] != '':
                 
                 fileGood = CheckFile(value["-TREATMENT_FILE-"])
-                voltageGood = VoltageCheck(value["-TREATMENT_VOLT-"])
+                voltageGood = treatmentVoltageCheck(value["-TREATMENT_VOLT-"])
 
                 if fileGood == True and voltageGood == True:
                     csvGood = CheckCSV(value["-TREATMENT_FILE-"])
@@ -881,40 +922,40 @@ while True:
                         try:
                             guinnessTHD(value["-TREATMENT_FILE-"], value["-TREATMENT_VOLT-"])
                         except ValueError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
                             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
                         except IndexError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
                             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
                             
                         except TypeError:
-                            value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
                             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
                     else:
-                        value["-ERROR_TREATMENT-"] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        value["-ERROR_TREATMENT-"] = unexpected_contents
                         win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
                 elif fileGood == False and voltageGood == True:
-                    value["-ERROR_TREATMENT-"] = "Error:  Invalid filepath or filetype. Input must be a .csv file"
+                    value["-ERROR_TREATMENT-"] = invalid_path_or_type
                     win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
                 elif fileGood == True and voltageGood == False:
                     csvGood = CheckCSV(value["-TREATMENT_FILE-"])
 
                     if csvGood == True:
-                        value["-ERROR_TREATMENT-"] = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
+                        value["-ERROR_TREATMENT-"] = invalid_treatment_V
                         win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
                     else:
-                        value["-ERROR_TREATMENT-"] = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nError:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        value["-ERROR_TREATMENT-"] = invalid_treatment_V_and_File
                         win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
                 elif fileGood == False and voltageGood == False:
-                    value["-ERROR_TREATMENT-"] = "Error:  Invalid file and voltage limit."
+                    value["-ERROR_TREATMENT-"] = bothInvalid
                     win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
             
             elif value["-TREATMENT_FILE-"] == '' or value["-TREATMENT_VOLT-"] == '':
-                value["-ERROR_TREATMENT-"] = "Error:  Both the filepath and voltage limit must be entered."
+                value["-ERROR_TREATMENT-"] = bothEmpty
                 win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
         
         
@@ -922,7 +963,7 @@ while True:
             if value["-PLACEMENT_FILE-"] != '' and value["-PLACEMENT_VOLT-"] != '':
                 
                 fileGood = CheckFile(value["-PLACEMENT_FILE-"])
-                voltageGood = VoltageCheck(value["-PLACEMENT_VOLT-"])
+                voltageGood = placementVoltageCheck(value["-PLACEMENT_VOLT-"])
 
                 if fileGood == True and voltageGood == True:
                     csvGood = CheckCSV(value["-PLACEMENT_FILE-"])
@@ -931,47 +972,47 @@ while True:
                         try:
                             calcRiseFall(value["-PLACEMENT_FILE-"], value["-PLACEMENT_VOLT-"])
                         except ValueError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_PLACEMENT-"] = incompatible_contents
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                         except IndexError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_PLACEMENT-"] = incompatible_contents
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
                             
                         except TypeError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_PLACEMENT-"] = incompatible_contents
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
                     else:
-                        value["-ERROR_PLACEMENT-"] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        value["-ERROR_PLACEMENT-"] = unexpected_contents
                         win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                 elif fileGood == False and voltageGood == True:
-                    value["-ERROR_PLACEMENT-"] = "Error:  Invalid filepath or filetype. Input must be a .csv file"
+                    value["-ERROR_PLACEMENT-"] = invalid_path_or_type
                     win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                 elif fileGood == True and voltageGood == False:
                     csvGood = CheckCSV(value["-PLACEMENT_FILE-"])
 
                     if csvGood == True:
-                        value["-ERROR_PLACEMENT-"] = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
+                        value["-ERROR_PLACEMENT-"] = invalid_placement_V
                         win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
                     else:
-                        value["-ERROR_PLACEMENT-"] = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nError:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        value["-ERROR_PLACEMENT-"] = invalid_placement_V_and_File
                         win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                 elif fileGood == False and voltageGood == False:
-                    value["-ERROR_PLACEMENT-"] = "Error:  Invalid file and voltage limit."
+                    value["-ERROR_PLACEMENT-"] = bothInvalid
                     win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
             
             elif value["-PLACEMENT_FILE-"] == '' or value["-PLACEMENT_VOLT-"] == '':
-                value["-ERROR_PLACEMENT-"] = "Error:  Both the filepath and voltage limit must be entered."
+                value["-ERROR_PLACEMENT-"] = bothEmpty
                 win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
         if event == "-PLACEMENT_TONE-":
             if value["-PLACEMENT_FILE-"] != '' and value["-PLACEMENT_VOLT-"] != '':
                 
                 fileGood = CheckFile(value["-PLACEMENT_FILE-"])
-                voltageGood = VoltageCheck(value["-PLACEMENT_VOLT-"])
+                voltageGood = placementVoltageCheck(value["-PLACEMENT_VOLT-"])
 
                 if fileGood == True and voltageGood == True:
                     csvGood = CheckAudioCSV(value["-PLACEMENT_FILE-"])
@@ -980,61 +1021,61 @@ while True:
                         try:
                             guinnessAudioSync(value["-PLACEMENT_FILE-"], value["-PLACEMENT_VOLT-"])
                         except ValueError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_PLACEMENT-"] = incompatible_contents
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                         except IndexError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_PLACEMENT-"] = incompatible_contents
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
                             
                         except TypeError:
-                            value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+                            value["-ERROR_PLACEMENT-"] = incompatible_contents
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
                     else:
-                        value["-ERROR_PLACEMENT-"] = "Error:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        value["-ERROR_PLACEMENT-"] = unexpected_contents
                         win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                 elif fileGood == False and voltageGood == True:
-                    value["-ERROR_PLACEMENT-"] = "Error:  Invalid filepath or filetype. Input must be a .csv file"
+                    value["-ERROR_PLACEMENT-"] = invalid_path_or_type
                     win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                 elif fileGood == True and voltageGood == False:
                     csvGood = CheckCSV(value["-PLACEMENT_FILE-"])
 
                     if csvGood == True:
-                        value["-ERROR_PLACEMENT-"] = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150."
+                        value["-ERROR_PLACEMENT-"] = invalid_placement_V
                         win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
                     else:
-                        value["-ERROR_PLACEMENT-"] = "Error:  Not a valid voltage limit input. Value must be an integer in the range from 0 to 150.\n\nError:  Input file contains unexpected contents. File must contain only a column of timestamps and a column of corresponding measured voltage."
+                        value["-ERROR_PLACEMENT-"] = invalid_placement_V_and_File
                         win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                 elif fileGood == False and voltageGood == False:
-                    value["-ERROR_PLACEMENT-"] = "Error:  Invalid file and voltage limit."
+                    value["-ERROR_PLACEMENT-"] = bothInvalid
                     win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
             
             elif value["-PLACEMENT_FILE-"] == '' or value["-PLACEMENT_VOLT-"] == '':
-                value["-ERROR_PLACEMENT-"] = "Error:  Both the filepath and voltage limit must be entered."
+                value["-ERROR_PLACEMENT-"] = bothEmpty
                 win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
                 
                 
     # Catch for value errors, application should not crash this way
     except ValueError:
-        value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
-        value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+        value["-ERROR_TREATMENT-"] = incompatible_contents
+        value["-ERROR_PLACEMENT-"] = incompatible_contents
         win1["-ERROR_TREATMENT-"].update(value["-ERROR_PLACEMENT-"])
         win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
         
     # Catch for index errors, application should not crash this way
     except IndexError:
-        value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
-        value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+        value["-ERROR_TREATMENT-"] = incompatible_contents
+        value["-ERROR_PLACEMENT-"] = incompatible_contents
         win1["-ERROR_TREATMENT-"].update(value["-ERROR_PLACEMENT-"])
         win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
         
     # Catch for type errors, application should not crash this way
     except TypeError:
-        value["-ERROR_TREATMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
-        value["-ERROR_PLACEMENT-"] = "Error:  Something went wrong. The contents of the input file are incompatible with the requested operation. Review contents of the input waveform .csv and the selected analysis option."
+        value["-ERROR_TREATMENT-"] = incompatible_contents
+        value["-ERROR_PLACEMENT-"] = incompatible_contents
         win1["-ERROR_TREATMENT-"].update(value["-ERROR_PLACEMENT-"])
         win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
