@@ -567,7 +567,7 @@ def guinnessAudioSync(filepath,voltageLimit):
     diff = []
     for i in range(0,len(audio_peakIndices),1):
         for j in range(0,len(placement_peakIndices),1):
-            if np.abs(audio_peakIndices[i]-placement_peakIndices[j])<500:
+            if np.abs(audio_peakIndices[i]-placement_peakIndices[j])<1000:
                 diff_temp = np.abs(x[audio_peakIndices[i]]-x[placement_peakIndices[j]])
                 diff.append(diff_temp)
                 plt.text(x[audio_peakIndices[i]]-0.05,audio[audio_peakIndices[i]]+0.2,"Delay = {:.4f}s".format(diff_temp))
