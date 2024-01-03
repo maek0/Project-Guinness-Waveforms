@@ -395,11 +395,14 @@ def calcRiseFall(filepath,voltageLimit):
 
     y_diff2 = np.gradient(np.gradient(y))
     peak_indices, peak_info = signal.find_peaks(y_diff2,height=0.05)
+    print(peak_indices)
 
     peak_heights = peak_info['peak_heights']
+    print(peak_heights)
 
     # highest_peak_index = peak_indices[np.argmax(peak_heights)]
-    second_and_third_highest_peak_indices = [peak_indices[np.argpartition(peak_heights,-2)[-2]], peak_indices[np.argpartition(peak_heights,-3)[-3]]]
+    second_and_third_highest_peak_indices = [peak_indices[0], peak_indices[-1]]
+    print(second_and_third_highest_peak_indices)
 
     buff = 5
     delay = 0.00005
@@ -410,8 +413,8 @@ def calcRiseFall(filepath,voltageLimit):
     y_windowed = y[first_cutoff_index:second_cutoff_index]
     x_windowed = x[first_cutoff_index:second_cutoff_index]
 
-    # plt.plot(x_windowed,y_windowed)
-    # plt.show()
+    plt.plot(x_windowed,y_windowed)
+    plt.show()
 
     ten = 0.1*float(voltageLimit)
     ninety = 0.9*float(voltageLimit)
@@ -422,6 +425,7 @@ def calcRiseFall(filepath,voltageLimit):
     negative_ten = np.where(y_windowed<=-ten)
     negative_ninety = np.where(y_windowed<=-ninety)
     
+    print(negative_ninety)
     
     positive_rise_x = [x_windowed[positive_ten][0], x_windowed[positive_ninety][0]]
     positive_rise_y = [y_windowed[positive_ten][0], y_windowed[positive_ninety][0]]
@@ -432,12 +436,6 @@ def calcRiseFall(filepath,voltageLimit):
     negative_fall_x = [x_windowed[negative_ninety][-1],x_windowed[negative_ten][-1]]
     negative_fall_y = [y_windowed[negative_ninety][-1],y_windowed[negative_ten][-1]]
     
-    print(positive_rise_x)
-    print(positive_rise_y)
-    print(switch_x)
-    print(switch_y)
-    print(negative_fall_x)
-    print(negative_fall_y)
     
     positive_rise_coefficients = np.polyfit(positive_rise_x,positive_rise_y,1)
     switch_coefficients = np.polyfit(switch_x,switch_y,1)
@@ -455,6 +453,8 @@ def calcRiseFall(filepath,voltageLimit):
     positiveFitY = positivePoly(positiveFitX)
     switchFitY = switchPoly(switchFitX)
     negativeFitY = negativePoly(negativeFitX)
+    
+    print(negativeFitX)
     
     
     ## Assigning min and max points of the pulse to variables ##
@@ -488,16 +488,8 @@ def calcRiseFall(filepath,voltageLimit):
                     [negative_ninety_fall, negativeFitY[np.where(negativeFitY>=-ninety)][0]],
                     [negative_ten_fall, negativeFitY[np.where(negativeFitY>=-ten)][0]]
                 ])
-
-    # line_markers = np.array([
-    #                 [x_windowed[positive_ten][0], y_windowed[positive_ten][0]],
-    #                 [x_windowed[positive_ninety][0], y_windowed[positive_ninety][0]],
-    #                 [x_windowed[positive_ninety][-1], y_windowed[positive_ninety][-1]],
-    #                 [x_windowed[negative_ninety][0], y_windowed[negative_ninety][0]],
-    #                 [x_windowed[negative_ninety][-1], y_windowed[negative_ninety][-1]],
-    #                 [x_windowed[negative_ten][-1], y_windowed[negative_ten][-1]]
-    #             ])
-    # plt.scatter(line_markers[:,0],line_markers[:,1],marker="o",color="green",s=50)
+    
+    print(points)
     
     plt.plot(x_windowed,y_windowed,label="Placement therapy output", color = "blue")
     plt.plot(x,y,color = "blue")
