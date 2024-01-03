@@ -432,12 +432,6 @@ def calcRiseFall(filepath,voltageLimit):
     negative_fall_x = [x_windowed[negative_ninety][-1],x_windowed[negative_ten][-1]]
     negative_fall_y = [y_windowed[negative_ninety][-1],y_windowed[negative_ten][-1]]
     
-    print(positive_rise_x)
-    print(positive_rise_y)
-    print(switch_x)
-    print(switch_y)
-    print(negative_fall_x)
-    print(negative_fall_y)
     
     positive_rise_coefficients = np.polyfit(positive_rise_x,positive_rise_y,1)
     switch_coefficients = np.polyfit(switch_x,switch_y,1)
@@ -488,16 +482,6 @@ def calcRiseFall(filepath,voltageLimit):
                     [negative_ninety_fall, negativeFitY[np.where(negativeFitY>=-ninety)][0]],
                     [negative_ten_fall, negativeFitY[np.where(negativeFitY>=-ten)][0]]
                 ])
-
-    # line_markers = np.array([
-    #                 [x_windowed[positive_ten][0], y_windowed[positive_ten][0]],
-    #                 [x_windowed[positive_ninety][0], y_windowed[positive_ninety][0]],
-    #                 [x_windowed[positive_ninety][-1], y_windowed[positive_ninety][-1]],
-    #                 [x_windowed[negative_ninety][0], y_windowed[negative_ninety][0]],
-    #                 [x_windowed[negative_ninety][-1], y_windowed[negative_ninety][-1]],
-    #                 [x_windowed[negative_ten][-1], y_windowed[negative_ten][-1]]
-    #             ])
-    # plt.scatter(line_markers[:,0],line_markers[:,1],marker="o",color="green",s=50)
     
     plt.plot(x_windowed,y_windowed,label="Placement therapy output", color = "blue")
     plt.plot(x,y,color = "blue")
@@ -508,10 +492,10 @@ def calcRiseFall(filepath,voltageLimit):
     # plt.plot(switchFitX,switchFitY)
     # plt.plot(negativeFitX,negativeFitY)
     
-    one_mark = 0.1
+    one_mark = 0.2
     two_mark = 0.55
     three_mark = 0.45
-    four_mark = 0.9
+    four_mark = 0.8
 
     plt.axhline(ten, xmin=one_mark, xmax=two_mark, label = "10% of set voltage, (+/-) {:.2f}V".format(ten), linestyle = "--", color = "magenta")
     plt.axhline(ninety, xmin=one_mark, xmax=two_mark, label = "90% of set voltage, (+/-) {:.2f}V".format(ninety), linestyle = "--", color = "green")
