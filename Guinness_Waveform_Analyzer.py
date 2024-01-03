@@ -432,6 +432,13 @@ def calcRiseFall(filepath,voltageLimit):
     negative_fall_x = [x_windowed[negative_ninety][-1],x_windowed[negative_ten][-1]]
     negative_fall_y = [y_windowed[negative_ninety][-1],y_windowed[negative_ten][-1]]
     
+    print(positive_rise_x)
+    print(positive_rise_y)
+    print(switch_x)
+    print(switch_y)
+    print(negative_fall_x)
+    print(negative_fall_y)
+    
     positive_rise_coefficients = np.polyfit(positive_rise_x,positive_rise_y,1)
     switch_coefficients = np.polyfit(switch_x,switch_y,1)
     negative_fall_coefficients = np.polyfit(negative_fall_x,negative_fall_y,1)
