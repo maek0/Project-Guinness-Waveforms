@@ -399,7 +399,7 @@ def calcRiseFall(filepath,voltageLimit):
     peak_heights = peak_info['peak_heights']
 
     # highest_peak_index = peak_indices[np.argmax(peak_heights)]
-    second_and_third_highest_peak_indices = [peak_indices[np.argpartition(peak_heights,-2)[-2]], peak_indices[np.argpartition(peak_heights,-3)[-3]]]
+    second_and_third_highest_peak_indices = [peak_indices[0], peak_indices[-1]]
 
     buff = 5
     delay = 0.00005
@@ -504,9 +504,9 @@ def calcRiseFall(filepath,voltageLimit):
     plt.xlabel(headers[0])
     plt.ylabel(headers[1])
 
-    plt.plot(positiveFitX,positiveFitY)
-    plt.plot(switchFitX,switchFitY)
-    plt.plot(negativeFitX,negativeFitY)
+    # plt.plot(positiveFitX,positiveFitY)
+    # plt.plot(switchFitX,switchFitY)
+    # plt.plot(negativeFitX,negativeFitY)
     
     one_mark = 0.1
     two_mark = 0.55
@@ -530,7 +530,7 @@ def calcRiseFall(filepath,voltageLimit):
     plt.text(negative_ten_rise+delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
     plt.text(negative_ninety_fall+delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
     
-    plt.text(min(x_windowed)+delay/2,max(y_windowed)+0.9,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
+    plt.text(min(x_windowed),max(y_windowed)+0.5,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
     
     # plotting options
     plt.title("Guinness Generator Placement Bipolar Pulse\nSet Voltage = {}V, Input file name: '{}'".format(voltageLimit, filename))
