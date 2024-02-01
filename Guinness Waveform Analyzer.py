@@ -226,13 +226,24 @@ def guinnessRampFilter(filepath,voltageLimit):
     x_ = csvArray[2:,0]
     y_ = csvArray[2:,1]
 
-    x,y = evenColumns(x_,y_)
+    x_full,y_full = evenColumns(x_,y_)
     
     filename = os.path.basename(filepath)
-    y = signal.detrend(y, type="constant")
+    y_full = signal.detrend(y_full, type="constant")
+    
+    backup = 500
+    dist = 100
+    
+    # find the indices of the peaks of the output energy signal 
+    y_startcutoff_xvalues = signal.find_peaks(y_full, height=[10,float(voltageLimit)], distance=dist)
+    # y_endcutoff_xvalues = signal.find_peaks(y_full, height=voltageLimit-10)
+    print(y_startcutoff_xvalues)
+
+    x = x_full[y_startcutoff_xvalues[0][0]-backup:len(x_full)]
+    y = y_full[y_startcutoff_xvalues[0][0]-backup:len(y_full)]
     
     # find the indices of the peaks of the output energy signal (not including voltage checks)
-    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=2.5,prominence=15,distance=350)
+    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=4,prominence=10,distance=dist)
 
     # get the y-values of the output energy peaks
     y_peaks_yvalues = ypeak_properties["peak_heights"]
