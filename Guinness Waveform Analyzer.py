@@ -558,10 +558,10 @@ def guinnessAudioSync(filepath,voltageLimit):
     plt.plot(x, place, label = "Placement Output", color = "blue")
     plt.plot(x, audio, label = "Placement Audio", color = "orange")
 
-    placement_peakIndices, _ = signal.find_peaks(place, height=0.2, distance=500)
+    placement_peakIndices, _ = signal.find_peaks(place, height=0.4, distance=500)
     placement_peakHeights = place[placement_peakIndices]
 
-    audio_peakIndices, _ = signal.find_peaks(audio, height=0.515, distance=500)
+    audio_peakIndices, _ = signal.find_peaks(audio, height=0.6, distance=500)
     audio_peakHeights = audio[audio_peakIndices]
 
     diff = []
