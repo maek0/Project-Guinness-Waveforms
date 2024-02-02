@@ -407,9 +407,9 @@ def calcRiseFall(filepath,voltageLimit):
     y_diff2 = np.gradient(np.gradient(y))
     peak_indices, peak_info = signal.find_peaks(y_diff2,height=0.05)
 
-    peak_heights = peak_info['peak_heights']
-
+    # peak_heights = peak_info['peak_heights']
     # highest_peak_index = peak_indices[np.argmax(peak_heights)]
+    
     second_and_third_highest_peak_indices = [peak_indices[0], peak_indices[-1]]
 
     buff = 5
