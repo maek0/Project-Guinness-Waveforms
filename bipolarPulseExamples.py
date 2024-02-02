@@ -11,14 +11,14 @@ ten = limit*0.10
 ninety = limit*0.9
 
 fullRamp = 1    # microsecond
-pulseWidth = 2  # microsecond
+pulseWidth = 1000  # microsecond
 
 microsecond = 1000000   # in a second
 samples = 10000000
 
 samplesInMicrosecond = samples/microsecond
 
-fileTime = 0.0001  # second(s)
+fileTime = 0.01  # second(s)
 
 fileLength = int(fileTime*samples)
 
@@ -66,14 +66,14 @@ ten = limit*0.10
 ninety = limit*0.9
 
 fullRamp = 2    # microsecond
-pulseWidth = 3  # microsecond
+pulseWidth = 1000  # microsecond
 
 microsecond = 1000000   # in a second
 samples = 10000000
 
 samplesInMicrosecond = samples/microsecond
 
-fileTime = 0.0001  # second(s)
+fileTime = 0.01  # second(s)
 
 fileLength = int(fileTime*samples)
 
