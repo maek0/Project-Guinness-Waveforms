@@ -235,12 +235,18 @@ def guinnessRampFilter(filepath,voltageLimit):
     dist = 100
     
     # find the indices of the peaks of the output energy signal 
-    y_startcutoff_xvalues = signal.find_peaks(y_full, height=[10,float(voltageLimit)], distance=dist)
-    # y_endcutoff_xvalues = signal.find_peaks(y_full, height=voltageLimit-10)
-    print(y_startcutoff_xvalues)
+    y_startcutoff_xvalues = signal.find_peaks(y_full, height=10, distance=dist)
+    y_endcutoff_xvalues = signal.find_peaks(y_full,height=float(voltageLimit), distance=dist)
 
-    x = x_full[y_startcutoff_xvalues[0][0]-backup:len(x_full)]
-    y = y_full[y_startcutoff_xvalues[0][0]-backup:len(y_full)]
+    if len(y_endcutoff_xvalues[0])>10:
+        x = x_full[y_startcutoff_xvalues[0][0]-backup:y_endcutoff_xvalues[0][10]]
+        y = y_full[y_startcutoff_xvalues[0][0]-backup:y_endcutoff_xvalues[0][10]]
+    elif len(y_endcutoff_xvalues[0])>5:
+        x = x_full[y_startcutoff_xvalues[0][0]-backup:y_endcutoff_xvalues[0][5]]
+        y = y_full[y_startcutoff_xvalues[0][0]-backup:y_endcutoff_xvalues[0][5]]
+    else:
+        x = x_full[y_startcutoff_xvalues[0][0]-backup:len(x_full)]
+        y = y_full[y_startcutoff_xvalues[0][0]-backup:len(y_full)]
     
     # find the indices of the peaks of the output energy signal (not including voltage checks)
     y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=4,prominence=10,distance=dist)
