@@ -231,7 +231,7 @@ def guinnessRampFilter(filepath,voltageLimit):
     filename = os.path.basename(filepath)
     y_full = signal.detrend(y_full, type="constant")
     
-    backup = 500
+    backup = 750
     dist = 100
     
     # find the indices of the peaks of the output energy signal 
@@ -239,14 +239,14 @@ def guinnessRampFilter(filepath,voltageLimit):
     y_endcutoff_xvalues = signal.find_peaks(y_full,height=float(voltageLimit), distance=dist)
 
     if len(y_endcutoff_xvalues[0])>10:
-        x = x_full[y_startcutoff_xvalues[0][0]-backup:y_endcutoff_xvalues[0][10]]
-        y = y_full[y_startcutoff_xvalues[0][0]-backup:y_endcutoff_xvalues[0][10]]
+        x = x_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][10]]
+        y = y_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][10]]
     elif len(y_endcutoff_xvalues[0])>5:
-        x = x_full[y_startcutoff_xvalues[0][0]-backup:y_endcutoff_xvalues[0][5]]
-        y = y_full[y_startcutoff_xvalues[0][0]-backup:y_endcutoff_xvalues[0][5]]
+        x = x_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][5]]
+        y = y_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][5]]
     else:
-        x = x_full[y_startcutoff_xvalues[0][0]-backup:len(x_full)]
-        y = y_full[y_startcutoff_xvalues[0][0]-backup:len(y_full)]
+        x = x_full[(y_startcutoff_xvalues[0][0]-backup):len(x_full)]
+        y = y_full[(y_startcutoff_xvalues[0][0]-backup):len(y_full)]
     
     # find the indices of the peaks of the output energy signal (not including voltage checks)
     y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=4,prominence=10,distance=dist)
@@ -689,10 +689,8 @@ while True:
         
         # When 2s elapse, reset the output window to blank. This sets a "timer" on any error text that is displayed there
         if sg.TIMEOUT_EVENT:
-            value["-ERROR_TREATMENT-"] = " "
-            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
-            value["-ERROR_PLACEMENT-"] = " "
-            win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
+            win1["-ERROR_TREATMENT-"].update("")
+            win1["-ERROR_PLACEMENT-"].update("")
         
         # Close application if the window is closed or if the "Exit" button is pressed
         if event == sg.WIN_CLOSED or event == 'Exit':
@@ -720,9 +718,9 @@ while True:
                         except TypeError:
                             value["-ERROR_TREATMENT-"] = incompatible_contents
                             win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
-                        else:
-                            value["-ERROR_TREATMENT-"] = unexpected_contents
-                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                    else:
+                        value["-ERROR_TREATMENT-"] = unexpected_contents
+                        win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
                 elif fileGood == False:
                     value["-ERROR_TREATMENT-"] = bothInvalid
@@ -753,9 +751,9 @@ while True:
                         except TypeError:
                             value["-ERROR_PLACEMENT-"] = incompatible_contents
                             win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
-                        else:
-                            value["-ERROR_PLACEMENT-"] = unexpected_contents
-                            win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
+                    else:
+                        value["-ERROR_PLACEMENT-"] = unexpected_contents
+                        win1["-ERROR_PLACEMENT-"].update(value["-ERROR_PLACEMENT-"])
 
                 elif fileGood == False:
                     value["-ERROR_PLACEMENT-"] = bothInvalid
