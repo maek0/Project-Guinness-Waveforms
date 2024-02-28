@@ -827,11 +827,13 @@ while True:
                            [sg.Text("\nCalculate THD", font=('None',info_txt_size+1,'underline'))],
                            [sg.Text("This button will take the treatment waveform input and tranform it into the frequency domain via the Fourier Transform. Frequency will be plotted against amplitude; the more that a frequency is present, the higher its plotted amplitude. These frequency amplitudes are used to calculate the Total Harmonic Distortion (THD) per the following equation:", size=(info_txt_width,None), font=('None',info_txt_size))],
                            [sg.Push(), sg.Image(THD_eq), sg.Push()],
-                           [sg.Text("For this function to work as intended, the input waveform should be of the pulse burst and resemble the following:", size=(info_txt_width,None), font=('None',info_txt_size))],
+                           [sg.Text("\nAverage Peaks", font=('None',info_txt_size+1,'underline'))],
+                           [sg.Text("This button will take the treament waveform input and calculate the average of the pulse amplitudes.")],
+                           [sg.Text("\nFor the 'Calculate THD' or 'Average Peaks' functions to work as intended, the input waveform should be of the pulse burst and resemble the following:", size=(info_txt_width,None), font=('None',info_txt_size))],
                            [sg.Push(), sg.Image(pulse_burst_example), sg.Push()],
                            [sg.Button("Close")]]
 
-            win2 = sg.Window(title="ST-0001-066-101A Information", layout=layout_win2, size=(1000,810))
+            win2 = sg.Window(title="ST-0001-066-101A Information", layout=layout_win2, size=(1000,890))
 
         # If the treatment info window is up, read events and/or values
         if win2_active == True:
