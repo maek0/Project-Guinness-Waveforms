@@ -384,6 +384,57 @@ def guinnessTHD(filepath,voltageLimit):
 
     # display the plot
     plt.show()
+    
+def averagePkAmp(filepath,voltageLimit):
+    datetime_rn = datetime.datetime.now()
+    str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
+    
+    headers = ["Time", "Voltage"]
+    csvFile = open(filepath)
+    csvArray = np.genfromtxt(csvFile, delimiter=",")
+    x_ = csvArray[2:-2,0]
+    y_ = csvArray[2:-2,1]
+
+    x_,y = evenColumns(x_,y_)
+
+    x = np.linspace(x_[0],x_[-1],np.size(y))
+
+    # plt.plot(x,y)
+    # plt.show()
+
+    dist = 5
+    
+    filename = os.path.basename(filepath)
+    
+    # y = signal.detrend(y, type="constant")
+    heightLim = int(voltageLimit)-2
+    
+    peaks_xvalues, peaks_xvalues_properties = signal.find_peaks(y, height=float(heightLim),prominence=10,distance=dist)
+    # print(peaks_xvalues)
+    peaks_yvalues = peaks_xvalues_properties["peak_heights"]
+    # print(peaks_yvalues)
+
+    avgAmp = np.mean(peaks_yvalues)
+    # print(avgAmp)
+    
+    plt.plot(x,y,label="Placement therapy output", color = "blue")
+    plt.scatter(x[peaks_xvalues],peaks_yvalues,marker="x",color="magenta", s=30, label="Pulse Peaks")
+    plt.xlabel(headers[0])
+    plt.ylabel(headers[1])
+
+    plt.axhline(avgAmp, label = "Average Peak Amplitude {:.3f}V".format(avgAmp), linestyle = "--", color = "green")
+
+    plt.text(min(x),max(y)+0.5,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
+    
+    # plotting options
+    plt.title("Guinness Generator Average Amplitude\nSet Voltage = {}V, Input file name: '{}'\nAverage Peak Voltage = {:.3f}".format(voltageLimit, filename, avgAmp))
+    
+    plt.xlim(min(x),max(x))
+    plt.ylim(min(y)-5,max(y)+5)
+    plt.legend(loc="lower left")
+
+    # display the plot
+    plt.show()
 
 def calcRiseFall(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
@@ -641,7 +692,7 @@ treatmentLayout = [
                 [sg.Text()],
                 [sg.Text('', key="-ERROR_TREATMENT-", size=(70,2))],
                 [sg.Text()],
-                [sg.Button('Analyze Voltage Ramp', key="-TREATMENT_RAMP-"), sg.Button('Analyze Pulse Burst', key="-TREATMENT_PULSE-"), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-TREAT_INFO-')]
+                [sg.Button('Analyze Voltage Ramp', key="-TREATMENT_RAMP-"), sg.Button('Calculate THD', key="-TREATMENT_THD-"), sg.Button('Average Peaks', key="-TREATMENT_Pk_AVG-"), sg.Push(), sg.Button('', image_data=help_button_base64, button_color=(sg.theme_background_color(),sg.theme_background_color()), border_width=0, key='-TREAT_INFO-')]
                 ]
 
 placementLayout = [
@@ -773,7 +824,7 @@ while True:
                            [sg.Text("\nAnalyze Voltage Ramp", font=('None',info_txt_size+1,'underline'))],
                            [sg.Text("This button will take the treatment waveform input and look for the lines of best fit of the voltage ramp; this is done piecewise as the Guinness Generator should ramp at a different rate before and after the output voltage reaches 66% of the set voltage limit. For this function to work properly, the input .csv file should capture the voltage ramp of the Guinness Generator from 0V to the set Voltage Limit. For this function to work as intended, the input waveform should resemble the following:", size=(info_txt_width,None), font=('None',info_txt_size))],
                            [sg.Push(), sg.Image(voltage_ramp_example), sg.Push()],
-                           [sg.Text("\nAnalyze Bipolar Pulse", font=('None',info_txt_size+1,'underline'))],
+                           [sg.Text("\nCalculate THD", font=('None',info_txt_size+1,'underline'))],
                            [sg.Text("This button will take the treatment waveform input and tranform it into the frequency domain via the Fourier Transform. Frequency will be plotted against amplitude; the more that a frequency is present, the higher its plotted amplitude. These frequency amplitudes are used to calculate the Total Harmonic Distortion (THD) per the following equation:", size=(info_txt_width,None), font=('None',info_txt_size))],
                            [sg.Push(), sg.Image(THD_eq), sg.Push()],
                            [sg.Text("For this function to work as intended, the input waveform should be of the pulse burst and resemble the following:", size=(info_txt_width,None), font=('None',info_txt_size))],
@@ -869,7 +920,7 @@ while True:
                 win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
 
 
-        if event == "-TREATMENT_PULSE-":
+        if event == "-TREATMENT_THD-":
             if value["-TREATMENT_FILE-"] != '' and value["-TREATMENT_VOLT-"] != '':
                 
                 fileGood = CheckFile(value["-TREATMENT_FILE-"])
@@ -918,7 +969,56 @@ while True:
                 value["-ERROR_TREATMENT-"] = bothEmpty
                 win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
         
-        
+        if event == "-TREATMENT_Pk_AVG-":
+            if value["-TREATMENT_FILE-"] != '' and value["-TREATMENT_VOLT-"] != '':
+                
+                fileGood = CheckFile(value["-TREATMENT_FILE-"])
+                voltageGood = treatmentVoltageCheck(value["-TREATMENT_VOLT-"])
+
+                if fileGood == True and voltageGood == True:
+                    csvGood = CheckCSV(value["-TREATMENT_FILE-"])
+
+                    if csvGood == True:
+                        try:
+                            averagePkAmp(value["-TREATMENT_FILE-"], value["-TREATMENT_VOLT-"])
+                        except ValueError:
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
+                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+
+                        except IndexError:
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
+                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                            
+                        except TypeError:
+                            value["-ERROR_TREATMENT-"] = incompatible_contents
+                            win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                    else:
+                        value["-ERROR_TREATMENT-"] = unexpected_contents
+                        win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+
+                elif fileGood == False and voltageGood == True:
+                    value["-ERROR_TREATMENT-"] = invalid_path_or_type
+                    win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+
+                elif fileGood == True and voltageGood == False:
+                    csvGood = CheckCSV(value["-TREATMENT_FILE-"])
+
+                    if csvGood == True:
+                        value["-ERROR_TREATMENT-"] = invalid_treatment_V
+                        win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                    else:
+                        value["-ERROR_TREATMENT-"] = invalid_treatment_V_and_File
+                        win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+
+                elif fileGood == False and voltageGood == False:
+                    value["-ERROR_TREATMENT-"] = bothInvalid
+                    win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+            
+            elif value["-TREATMENT_FILE-"] == '' or value["-TREATMENT_VOLT-"] == '':
+                value["-ERROR_TREATMENT-"] = bothEmpty
+                win1["-ERROR_TREATMENT-"].update(value["-ERROR_TREATMENT-"])
+                
+                
         if event == "-PLACEMENT_PULSE-":
             if value["-PLACEMENT_FILE-"] != '' and value["-PLACEMENT_VOLT-"] != '':
                 
