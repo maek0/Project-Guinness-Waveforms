@@ -402,7 +402,7 @@ def averagePkAmp(filepath,voltageLimit):
     # plt.plot(x,y)
     # plt.show()
 
-    dist = 5
+    dist = 20
     
     filename = os.path.basename(filepath)
     
