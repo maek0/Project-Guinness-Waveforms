@@ -22,26 +22,43 @@ if v > 0:
     x = x[:yN]
 elif v < 0:
     y = y[:xN]
+    
+print(y[15])
 
 if n.size>0 and m.size>0:
     ind = max(max(n),max(m))
-    x = x[:ind-1]
-    y = y[:ind-1]
+    ind = int(ind)
+    print(ind)
+    # x = x[:ind-1]
+    # y = y[:ind-1]
+    x = x[ind+1:]
+    y = y[ind+1:]
     # if there are NaN values anywhere in x or y, cut both of them down before the earliest found NaN
 elif n.size>0 and m.size==0:
     ind = max(n)
-    x = x[:ind-1]
-    y = y[:ind-1]
+    ind = int(ind)
+    print(ind)
+    # x = x[:ind-1]
+    # y = y[:ind-1]
+    x = x[ind+1:]
+    y = y[ind+1:]
     # if there are NaN values anywhere in x, cut both x and y down before the earliest found NaN in x
 elif n.size==0 and m.size>0:
-    ind = max(m)
-    x = x[:ind-1]
-    y = y[:ind-1]
+    ind = max(m)[0]
+    ind = int(ind)
+    print(ind)
+    # x = x[:ind-1]
+    # y = y[:ind-1]
+    x = x[ind+1:]
+    y = y[ind+1:]
 
-y = signal.detrend(y, type="constant")
+print(y[15])
+# print(y)
+    
+# y = signal.detrend(y, type="constant")
 
-y_diff2 = np.gradient(np.gradient(y))
-y_diff2 = np.abs(y_diff2)
+# y_diff2 = np.gradient(np.gradient(y))
+# y_diff2 = np.abs(y_diff2)
 
-plt.plot(y_diff2)
+plt.plot(x,y)
 plt.show()

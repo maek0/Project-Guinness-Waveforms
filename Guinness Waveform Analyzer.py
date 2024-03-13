@@ -26,19 +26,31 @@ def evenColumns(x,y):
         y = y[:xN]
     
     if n.size>0 and m.size>0:
-        ind = max(max(n),max(m))
-        x = x[:ind-1]
-        y = y[:ind-1]
-        # if there are NaN values anywhere in x or y, cut both of them down before the earliest found NaN
+        ind = int(max(max(n),max(m))[0])
+        # x = x[:ind-1]
+        # y = y[:ind-1]
+        x = x[ind+1:]
+        y = y[ind+1:]
+        
+    # if there are NaN values anywhere in y, cut both x and y down before the earliest found NaN in y
+    # this issue typically happens in the beginning of the y array. If there are nan value at or near the end of an array, this will break the input and it will not work. It will require manual editing of the input file.
     elif n.size>0 and m.size==0:
-        ind = max(n)
-        x = x[:ind-1]
-        y = y[:ind-1]
-        # if there are NaN values anywhere in x, cut both x and y down before the earliest found NaN in x
+        ind = int(max(n)[0])
+        # x = x[:ind-1]
+        # y = y[:ind-1]
+        x = x[ind+1:]
+        y = y[ind+1:]
+        
+    # if there are NaN values anywhere in x, cut both x and y down before the earliest found NaN in x
     elif n.size==0 and m.size>0:
-        ind = max(m)
-        x = x[:ind-1]
-        y = y[:ind-1]
+        ind = int(max(m)[0])
+        # x = x[:ind-1]
+        # y = y[:ind-1]
+        x = x[ind+1:]
+        y = y[ind+1:]
+        
+    # x = np.delete(x,np.where(x==None)[0],axis=0)
+    # y = np.delete(y,np.where(y==None)[0],axis=0)
 
     return x, y
 
