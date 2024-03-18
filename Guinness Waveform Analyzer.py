@@ -48,9 +48,6 @@ def evenColumns(x,y):
         # y = y[:ind-1]
         x = x[ind+1:]
         y = y[ind+1:]
-        
-    # x = np.delete(x,np.where(x==None)[0],axis=0)
-    # y = np.delete(y,np.where(y==None)[0],axis=0)
 
     return x, y
 
@@ -243,7 +240,8 @@ def guinnessRampFilter(filepath,voltageLimit):
     filename = os.path.basename(filepath)
     y_full = signal.detrend(y_full, type="constant")
     
-    backup = 750
+    # if time permits, change dist to be dependent on the time delta of the whole input file
+    backup = 1000
     dist = 100
     
     # find the indices of the peaks of the output energy signal 
@@ -419,7 +417,7 @@ def averagePkAmp(filepath,voltageLimit):
     filename = os.path.basename(filepath)
     
     # y = signal.detrend(y, type="constant")
-    heightLim = int(voltageLimit)-2
+    heightLim = int(voltageLimit)-5
     
     peaks_xvalues, peaks_xvalues_properties = signal.find_peaks(y, height=float(heightLim),prominence=10,distance=dist)
     # print(peaks_xvalues)
