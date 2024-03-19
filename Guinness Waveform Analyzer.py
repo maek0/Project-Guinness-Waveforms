@@ -245,8 +245,12 @@ def guinnessRampFilter(filepath,voltageLimit):
     dist = 100
     
     # find the indices of the peaks of the output energy signal 
-    y_startcutoff_xvalues = signal.find_peaks(y_full, height=10, distance=dist)
+    y_startcutoff_xvalues = signal.find_peaks(y_full, height=7, distance=dist)
     y_endcutoff_xvalues = signal.find_peaks(y_full,height=float(voltageLimit), distance=dist)
+    
+    # find the first pulse peak that is above 7 volts - this should be the second ramping pulse
+    # the impedance pings are very hard to accurately weed out of the sample, so to get an accurate starting point of the ramp the function will find the second pulse and back up from there
+    # figure out the sampling rate of the input file and figure out how far back the first pulse will be
 
     if len(y_endcutoff_xvalues[0])>10:
         x = x_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][10]]
