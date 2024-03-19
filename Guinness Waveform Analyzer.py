@@ -229,7 +229,7 @@ def guinnessRampFilter(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
     
-    headers = ["Time", "Voltage"]
+    headers = ["Time (s)", "Voltage (V)"]
     csvFile = open(filepath)
     csvArray = np.genfromtxt(csvFile, delimiter=",")
     x_ = csvArray[2:,0]
@@ -332,7 +332,7 @@ def guinnessTHD(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
     
-    headers = ["Time", "Voltage"]
+    headers = ["Time (s)", "Voltage (V)"]
     csvFile = open(filepath)
     csvArray = np.genfromtxt(csvFile, delimiter=",")
     x_ = csvArray[2:-2,0]
@@ -399,7 +399,7 @@ def averagePkAmp(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
     
-    headers = ["Time", "Voltage"]
+    headers = ["Time (s)", "Voltage (V)"]
     csvFile = open(filepath)
     csvArray = np.genfromtxt(csvFile, delimiter=",")
     x_ = csvArray[2:-2,0]
@@ -450,7 +450,7 @@ def calcRiseFall(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
     
-    headers = ["Time", "Voltage"]
+    headers = ["Time (s)", "Voltage (V)"]
     csvFile = open(filepath)
     csvArray = np.genfromtxt(csvFile, delimiter=",")
     x_ = csvArray[2:-2,0]
@@ -619,7 +619,7 @@ def guinnessAudioSync(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
     
-    headers = ["Time", "Voltage"]
+    headers = ["Time (s)", "Voltage (V)"]
     csvFile = open(filepath)
     csvArray = np.genfromtxt(csvFile, delimiter=",")
     x_ = csvArray[2:-2,0]
@@ -645,16 +645,16 @@ def guinnessAudioSync(filepath,voltageLimit):
     placement_peakIndices, _ = signal.find_peaks(place, height=0.4, distance=500)
     placement_peakHeights = place[placement_peakIndices]
 
-    audio_peakIndices, _ = signal.find_peaks(audio, height=0.6, distance=500)
+    audio_peakIndices, _ = signal.find_peaks(audio, height=1, distance=2500)
     audio_peakHeights = audio[audio_peakIndices]
 
     diff = []
     for i in range(0,len(audio_peakIndices),1):
         for j in range(0,len(placement_peakIndices),1):
-            if np.abs(audio_peakIndices[i]-placement_peakIndices[j])<1000:
+            if np.abs(audio_peakIndices[i]-placement_peakIndices[j])<1500:
                 diff_temp = np.abs(x[audio_peakIndices[i]]-x[placement_peakIndices[j]])
                 diff.append(diff_temp)
-                plt.text(x[audio_peakIndices[i]]-0.05,audio[audio_peakIndices[i]]+0.2,"Delay = {:.4f}s".format(diff_temp))
+                plt.text(x[placement_peakIndices[i]]+0.02,-place[placement_peakIndices[i]]+float(0.25*float(voltageLimit)),"Delay = {:.4f}s".format(diff_temp))
             else:
                 pass
 
@@ -666,7 +666,7 @@ def guinnessAudioSync(filepath,voltageLimit):
     plt.scatter(x[audio_peakIndices],audio_peakHeights,marker="x",color="red", s=50,label="Audio Tone(s)")
 
     # tool name
-    plt.text(min(x)+0.1,max(place)+0.5,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
+    plt.text(min(x)+0.05,max(place)+0.9,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
 
     # plotting options
     plt.title("Guinness Generator Placement Output and Audio Tones\nSet Voltage = {}V, Input File Name = '{}'\nAverage Tone Delay = {:.4f} seconds".format(voltageLimit, filename, average_delay))
