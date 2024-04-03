@@ -225,6 +225,7 @@ def linearRegression(x, y):
     return r_sq, slope, intercept, y_predict
 
 def guinnessRampFilter(filepath,voltageLimit):
+    # this function is only guaranteed to work as expected with an input file that had an impedance of ~2000 ohms (1700-2000)
     
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
@@ -241,31 +242,33 @@ def guinnessRampFilter(filepath,voltageLimit):
     y_full = signal.detrend(y_full, type="constant")
     
     # if time permits, change dist to be dependent on the time delta of the whole input file
-    backup = 1000
-    dist = 100
+    # backup = 1000
+    # dist = 100
     
     # find the indices of the peaks of the output energy signal 
-    y_startcutoff_xvalues = signal.find_peaks(y_full, height=7, distance=dist)
-    y_endcutoff_xvalues = signal.find_peaks(y_full,height=float(voltageLimit), distance=dist)
+    y_startcutoff_xvalues = signal.find_peaks(y_full, height=8, distance=dist)
+    # y_endcutoff_xvalues = signal.find_peaks(y_full,height=float(voltageLimit), distance=dist)
     
-    # find the first pulse peak that is above X volts - this should be the second ramping pulse
+    # find the first pulse peak that is above 8 volts - this should be the second ramping pulse
     # the impedance pings are very hard to accurately weed out of the sample, so to get an accurate starting point of the ramp the function will find the second pulse and back up from there
     # figure out the sampling rate of the input file and figure out how far back the first pulse will be
     
-    fs = len(x_full)/(x_full[-1]-x_full[0])
+    fs = len(x_full)/(x_full[-1]-x_full[0])     # number of samples in a second
+    backup = int(np.ceil(0.75*fs))              # backup 0.75s before the second pulse ^
+    dist = int(np.ceil(0.25*fs))
 
-    if len(y_endcutoff_xvalues[0])>10:
-        x = x_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][10]]
-        y = y_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][10]]
-    elif len(y_endcutoff_xvalues[0])>5:
-        x = x_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][5]]
-        y = y_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][5]]
-    else:
-        x = x_full[(y_startcutoff_xvalues[0][0]-backup):len(x_full)]
-        y = y_full[(y_startcutoff_xvalues[0][0]-backup):len(y_full)]
+    # if len(y_endcutoff_xvalues[0])>10:
+    #     x = x_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][10]]
+    #     y = y_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][10]]
+    # elif len(y_endcutoff_xvalues[0])>5:
+    #     x = x_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][5]]
+    #     y = y_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][5]]
+    # else:
+    x = x_full[(y_startcutoff_xvalues[0][0]-backup):len(x_full)]
+    y = y_full[(y_startcutoff_xvalues[0][0]-backup):len(y_full)]
     
     # find the indices of the peaks of the output energy signal (not including voltage checks)
-    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=4,prominence=10,distance=dist)
+    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=5,prominence=10,distance=dist)
 
     # get the y-values of the output energy peaks
     y_peaks_yvalues = ypeak_properties["peak_heights"]
@@ -703,9 +706,6 @@ treatmentLayout = [
                 [sg.Text('File:'), sg.Push(), sg.Input(key="-TREATMENT_FILE-", do_not_clear=True, size=(50,3)), sg.FileBrowse()],
                 [sg.Text()],
                 [sg.Text('Voltage Limit:'), sg.Push(), sg.Input(key="-TREATMENT_VOLT-", do_not_clear=True, size=(50,3))],
-                [sg.Text()],
-                [sg.Text('Average Impedance:'), sg.Push(), sg.Input(key="-OHMS-", do_not_clear=True, size=(50,3))],
-                [sg.Text("Impedance input is only required and used for the 'Analyze Voltage Ramp' function.",font=("None",10,"italic"))],
                 [sg.Text()],
                 [sg.Button('Plot Input File',key='-T_PLOT-')],
                 [sg.Text()],
