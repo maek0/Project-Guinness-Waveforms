@@ -636,6 +636,7 @@ def guinnessAudioSync(filepath,voltageLimit):
     # audio = signal.detrend(audio, type="constant")
     
     # vertically offset the audio signal for clearer graphing/visualization
+    audio_diff2 = np.abs(np.gradient(np.gradient(audio)))
     audio = audio + 0.5
 
     # plot placement and audio
@@ -649,7 +650,7 @@ def guinnessAudioSync(filepath,voltageLimit):
     
     placement_peakHeights = place[placement_peakIndices]
 
-    audio_peakIndices, _ = signal.find_peaks(audio, height=1, distance=2500)
+    audio_peakIndices, _ = signal.find_peaks(audio_diff2, height=0.15, distance=2500)
     audio_peakHeights = audio[audio_peakIndices]
 
     diff = []

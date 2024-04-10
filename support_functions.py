@@ -68,6 +68,11 @@ def guinnessAudioSync(filepath,voltageLimit):
     filename = os.path.basename(filepath)
     
     place = signal.detrend(place, type="constant")
+    place_diff2 = np.abs(np.gradient(np.gradient(place)))
+    plt.plot(x,place_diff2)
+    audio_diff2 = np.abs(np.gradient(np.gradient(audio)))
+    plt.plot(x,audio_diff2)
+    plt.show()
     # audio = signal.detrend(audio, type="constant")
     
     # vertically offset the audio signal for clearer graphing/visualization
@@ -82,7 +87,7 @@ def guinnessAudioSync(filepath,voltageLimit):
     # print(placement_peakIndices)
     # print(placement_peakHeights)
 
-    audio_peakIndices, _ = signal.find_peaks(audio, height=1, distance=2500)
+    audio_peakIndices, _ = signal.find_peaks(audio_diff2, height=0.15, distance=2500)
     audio_peakHeights = audio[audio_peakIndices]
     # print(audio_peakIndices)
     # print(audio_peakHeights)
@@ -365,3 +370,170 @@ def THD(x, y, voltageLimit, filepath, str_datetime_rn, headers):
     
     return thd
 
+def calcRiseFall(filepath,voltageLimit):
+    datetime_rn = datetime.datetime.now()
+    str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
+    
+    headers = ["Time (s)", "Voltage (V)"]
+    csvFile = open(filepath)
+    csvArray = np.genfromtxt(csvFile, delimiter=",")
+    x_ = csvArray[2:-2,0]
+    y_ = csvArray[2:-2,1]
+
+    x,y = evenColumns(x_,y_)
+
+    '''
+    DO THIS FOR ALL 
+    - CREATE A LINE FROM THE MIN TO THE MAX 
+    - PLOT WHERE THE LINE INTERCEPTS THE PLOTTING 10% AND 90% LINES 
+    - CALCULATE RISE/FALL TIME FROM THOSE POINTS
+    '''
+
+    filename = os.path.basename(filepath)
+    
+    y = signal.detrend(y, type="constant")
+
+    y_diff2 = np.gradient(np.gradient(y))
+    y_diff2 = np.abs(y_diff2)
+
+    # plt.plot(y_diff2)
+
+    peak_indices, peak_info = signal.find_peaks(y_diff2,height=0.06)
+    # print(peak_indices)
+
+    # peak_heights = peak_info['peak_heights']
+    # highest_peak_index = peak_indices[np.argmax(peak_heights)]
+
+    # secondThird = peak_indices[np.argmax(peak_heights)]
+    # second_and_third_highest_peak_indices = [peak_indices[0], peak_indices[-1]]
+
+    buff = 5
+    delay = 0.00005
+
+    first_cutoff_index = peak_indices[0]-buff
+    second_cutoff_index = peak_indices[-1]+buff
+
+    y_windowed = y[first_cutoff_index:second_cutoff_index]
+    x_windowed = x[first_cutoff_index:second_cutoff_index]
+
+    # plt.plot(x_windowed,y_windowed)
+    # plt.show()
+
+    ten = 0.1*float(voltageLimit)
+    ninety = 0.9*float(voltageLimit)
+    half = 0.5*float(voltageLimit)
+    
+    positive_ten = np.where(y_windowed>=ten)
+    positive_ninety = np.where(y_windowed>=ninety)
+    negative_ten = np.where(y_windowed<=-ten)
+    negative_ninety = np.where(y_windowed<=-ninety)
+    
+    
+    positive_rise_x = [x_windowed[positive_ten][0], x_windowed[positive_ninety][0]]
+    positive_rise_y = [y_windowed[positive_ten][0], y_windowed[positive_ninety][0]]
+    
+    switch_x = [x_windowed[positive_ninety][-1],x_windowed[negative_ninety][0]]
+    switch_y = [y_windowed[positive_ninety][-1],y_windowed[negative_ninety][0]]
+    
+    negative_fall_x = [x_windowed[negative_ninety][-1],x_windowed[negative_ten][-1]]
+    negative_fall_y = [y_windowed[negative_ninety][-1],y_windowed[negative_ten][-1]]
+    
+    
+    positive_rise_coefficients = np.polyfit(positive_rise_x,positive_rise_y,1)
+    switch_coefficients = np.polyfit(switch_x,switch_y,1)
+    negative_fall_coefficients = np.polyfit(negative_fall_x,negative_fall_y,1)
+    
+    positivePoly = np.poly1d(positive_rise_coefficients)
+    switchPoly = np.poly1d(switch_coefficients)
+    negativePoly = np.poly1d(negative_fall_coefficients)
+    
+    length = 500000
+    positiveFitX = np.linspace(x_windowed[0]-delay, x_windowed[positive_ninety][-1], length)
+    switchFitX = np.linspace(x_windowed[positive_ninety][0], x_windowed[negative_ninety][-1], length)
+    negativeFitX = np.linspace(x_windowed[negative_ninety][0], x_windowed[-1]+delay,length)
+    
+    positiveFitY = positivePoly(positiveFitX)
+    switchFitY = switchPoly(switchFitX)
+    negativeFitY = negativePoly(negativeFitX)
+    
+    # print(negativeFitX)
+    
+    
+    ## Assigning min and max points of the pulse to variables ##
+    positive_ten_rise = positiveFitX[np.where(positiveFitY>=ten)][0]
+    
+    positive_ninety_rise = positiveFitX[np.where(positiveFitY>=ninety)][0]
+    positive_ninety_fall = switchFitX[np.where(switchFitY<=ninety)][0]
+    
+    positive_ten_fall = switchFitX[np.where(switchFitY<=ten)][0]
+    negative_ten_rise = switchFitX[np.where(switchFitY<=-ten)][0]
+
+    negative_ninety_rise = switchFitX[np.where(switchFitY<=-ninety)][0]
+    negative_ninety_fall = negativeFitX[np.where(negativeFitY>=-ninety)][0]
+
+    negative_ten_fall = negativeFitX[np.where(negativeFitY>=-ten)][0]
+    
+    
+    positive_rise_time = positive_ninety_rise-positive_ten_rise
+    positive_fall_time = positive_ten_fall-positive_ninety_fall
+    # switch_time = negative_ninety_rise-positive_ninety_fall
+    negative_rise_time = negative_ninety_rise-negative_ten_rise
+    negative_fall_time = negative_ten_fall-negative_ninety_fall
+    
+    points = np.array([
+                    [positive_ten_rise, positiveFitY[np.where(positiveFitY>=ten)][0]],
+                    [positive_ninety_rise, positiveFitY[np.where(positiveFitY>=ninety)][0]],
+                    [positive_ninety_fall, switchFitY[np.where(switchFitY<=ninety)][0]],
+                    [positive_ten_fall, switchFitY[np.where(switchFitY<=ten)][0]],
+                    [negative_ten_rise, switchFitY[np.where(switchFitY<=-ten)][0]],
+                    [negative_ninety_rise, switchFitY[np.where(switchFitY<=-ninety)][0]],
+                    [negative_ninety_fall, negativeFitY[np.where(negativeFitY>=-ninety)][0]],
+                    [negative_ten_fall, negativeFitY[np.where(negativeFitY>=-ten)][0]]
+                ])
+    
+    plt.plot(x_windowed,y_windowed,label="Placement therapy output", color = "blue")
+    plt.plot(x,y,color = "blue")
+    plt.xlabel(headers[0])
+    plt.ylabel(headers[1])
+
+    # plt.plot(positiveFitX,positiveFitY)
+    # plt.plot(switchFitX,switchFitY)
+    # plt.plot(negativeFitX,negativeFitY)
+    
+    one_mark = 0.2
+    two_mark = 0.55
+    three_mark = 0.45
+    four_mark = 0.8
+
+    plt.axhline(ten, xmin=one_mark, xmax=two_mark, label = "10% of set voltage, (+/-) {:.2f}V".format(ten), linestyle = "--", color = "magenta")
+    plt.axhline(ninety, xmin=one_mark, xmax=two_mark, label = "90% of set voltage, (+/-) {:.2f}V".format(ninety), linestyle = "--", color = "green")
+    plt.axhline(-ten, xmin=three_mark, xmax=four_mark, linestyle = "--", color = "magenta")
+    plt.axhline(-ninety, xmin=three_mark, xmax=four_mark, linestyle = "--", color = "green")
+    
+    plt.scatter(points[:,0],points[:,1],marker="x",color="red", s=50, label="Rise and Fall markers")
+    
+    plt.axhline(0, label = "Origin (0V)", color = "black")
+
+    microsecond = 1000000
+    
+    plt.text(positive_ten_rise+delay,half,"Rise time: {:.4f} $\mu$s".format(positive_rise_time*microsecond),fontsize="small")
+    plt.text(positive_ninety_fall+delay,half,"Fall time: {:.4f} $\mu$s".format(positive_fall_time*microsecond),fontsize="small")
+    # plt.text(positive_ninety_rise+delay,ten,"Time: {:.4f} $\mu$s".format(switch_time*microsecond),fontsize="small")
+    plt.text(negative_ten_rise+delay,-half,"Rise time: {:.4f} $\mu$s".format(negative_rise_time*microsecond),fontsize="small")
+    plt.text(negative_ninety_fall+delay,-half,"Fall time: {:.4f} $\mu$s".format(negative_fall_time*microsecond),fontsize="small")
+    
+    plt.text(min(x_windowed),max(y_windowed)+0.5,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
+    
+    # plotting options
+    plt.title("Guinness Generator Placement Bipolar Pulse\nSet Voltage = {}V, Input file name: '{}'".format(voltageLimit, filename))
+    
+    xscale = x[min([first_cutoff_index,len(x)-second_cutoff_index])]-x[0]
+    plt.xlim(x[first_cutoff_index]-xscale, x[second_cutoff_index]+xscale)
+    
+    yscale = float(voltageLimit)/5.0
+    plt.ylim(min(y_windowed)-yscale,max(y_windowed)+yscale)
+    
+    plt.legend(loc="upper right")
+
+    # display the plot
+    plt.show()
