@@ -192,7 +192,7 @@ def plotContents(filepath, columns):
     if columns == 3:
         z_ = csvArray[2:-2,2]
         _, z = evenColumns(x,z_)
-        z = signal.detrend(x,type="constant")
+        # z = signal.detrend(x,type="constant")
         plt.plot(x,z,label="Column 3 of the input file.")
     
     plt.title("Preview plot of the input file.\n{}".format(str_datetime_rn))
@@ -633,7 +633,7 @@ def guinnessAudioSync(filepath,voltageLimit):
     filename = os.path.basename(filepath)
     
     place = signal.detrend(place, type="constant")
-    audio = signal.detrend(audio, type="constant")
+    # audio = signal.detrend(audio, type="constant")
     
     # vertically offset the audio signal for clearer graphing/visualization
     audio = audio + 0.5
@@ -642,7 +642,11 @@ def guinnessAudioSync(filepath,voltageLimit):
     plt.plot(x, place, label = "Placement Output", color = "blue")
     plt.plot(x, audio, label = "Placement Audio", color = "orange")
 
-    placement_peakIndices, _ = signal.find_peaks(place, height=0.4, distance=500)
+    if float(voltageLimit) >= 1.0:
+        placement_peakIndices, _ = signal.find_peaks(place, height=0.4, distance=500)
+    else:
+        placement_peakIndices, _ = signal.find_peaks(place, height=0.05, distance=500)
+    
     placement_peakHeights = place[placement_peakIndices]
 
     audio_peakIndices, _ = signal.find_peaks(audio, height=1, distance=2500)
@@ -654,7 +658,7 @@ def guinnessAudioSync(filepath,voltageLimit):
             if np.abs(audio_peakIndices[i]-placement_peakIndices[j])<1500:
                 diff_temp = np.abs(x[audio_peakIndices[i]]-x[placement_peakIndices[j]])
                 diff.append(diff_temp)
-                plt.text(x[placement_peakIndices[i]]+0.02,-place[placement_peakIndices[i]]+float(0.25*float(voltageLimit)),"Delay = {:.4f}s".format(diff_temp))
+                plt.text(x[placement_peakIndices[j]]+0.02,-place[placement_peakIndices[j]]+float(0.25*float(voltageLimit)),"Delay = {:.4f}s".format(diff_temp))
             else:
                 pass
 

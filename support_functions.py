@@ -5,6 +5,128 @@ from scipy import signal
 from scipy.fftpack import fft
 from scipy.fftpack import fftfreq
 import matplotlib.pyplot as plt
+import datetime
+
+toolVersion = "101A"
+
+def evenColumns(x,y):
+    xN = len(x)
+    yN = len(y)
+    v = xN - yN
+
+    # find any NaN values in x and y
+    n = np.argwhere(np.isnan(x))
+    m = np.argwhere(np.isnan(y))
+    
+    # if x and y are somehow different lengths, cut them to the same length
+    if v > 0:
+        x = x[:yN]
+    elif v < 0:
+        y = y[:xN]
+    
+    if n.size>0 and m.size>0:
+        ind = int(max(max(n),max(m))[0])
+        # x = x[:ind-1]
+        # y = y[:ind-1]
+        x = x[ind+1:]
+        y = y[ind+1:]
+        
+    # if there are NaN values anywhere in y, cut both x and y down before the earliest found NaN in y
+    # this issue typically happens in the beginning of the y array. If there are nan value at or near the end of an array, this will break the input and it will not work. It will require manual editing of the input file.
+    elif n.size>0 and m.size==0:
+        ind = int(max(n)[0])
+        # x = x[:ind-1]
+        # y = y[:ind-1]
+        x = x[ind+1:]
+        y = y[ind+1:]
+        
+    # if there are NaN values anywhere in x, cut both x and y down before the earliest found NaN in x
+    elif n.size==0 and m.size>0:
+        ind = int(max(m)[0])
+        # x = x[:ind-1]
+        # y = y[:ind-1]
+        x = x[ind+1:]
+        y = y[ind+1:]
+
+    return x, y
+
+def guinnessAudioSync(filepath,voltageLimit):
+    datetime_rn = datetime.datetime.now()
+    str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
+    
+    headers = ["Time (s)", "Voltage (V)"]
+    csvFile = open(filepath)
+    csvArray = np.genfromtxt(csvFile, delimiter=",")
+    x_ = csvArray[2:-2,0]
+    place_ = csvArray[2:-2,1]
+    audio_ = csvArray[2:-2,2]
+
+    x, place1 = evenColumns(x_,place_)
+    x, audio1 = evenColumns(x_,audio_)
+    audio, place = evenColumns(audio1,place1)
+    
+    filename = os.path.basename(filepath)
+    
+    place = signal.detrend(place, type="constant")
+    # audio = signal.detrend(audio, type="constant")
+    
+    # vertically offset the audio signal for clearer graphing/visualization
+    audio = audio + 0.5
+
+    # plot placement and audio
+    plt.plot(x, place, label = "Placement Output", color = "blue")
+    plt.plot(x, audio, label = "Placement Audio", color = "orange")
+
+    placement_peakIndices, _ = signal.find_peaks(place, height=0.4, distance=500)
+    placement_peakHeights = place[placement_peakIndices]
+    # print(placement_peakIndices)
+    # print(placement_peakHeights)
+
+    audio_peakIndices, _ = signal.find_peaks(audio, height=1, distance=2500)
+    audio_peakHeights = audio[audio_peakIndices]
+    # print(audio_peakIndices)
+    # print(audio_peakHeights)
+
+    diff = []
+    print(len(audio_peakIndices))
+    print(audio_peakIndices)
+    print(len(placement_peakIndices))
+    print(placement_peakIndices)
+    
+    for i in range(0,len(audio_peakIndices),1):
+        for j in range(0,len(placement_peakIndices),1):
+            if np.abs(audio_peakIndices[i]-placement_peakIndices[j])<1500:
+                diff_temp = np.abs(x[audio_peakIndices[i]]-x[placement_peakIndices[j]])
+                diff.append(diff_temp)
+                # print(diff_temp,x[placement_peakIndices[i]],place[placement_peakIndices[i]])
+                plt.text(x[placement_peakIndices[j]]+0.02,-place[placement_peakIndices[j]]+float(0.25*float(voltageLimit)),"Delay = {:.4f}s".format(diff_temp))
+            else:
+                pass
+            print("placement index",j)
+        # print(diff)
+        print("audio index",i)
+
+    print(diff)
+    diff = np.array(diff)
+    average_delay = np.mean(diff)
+
+    # plot peaks of placement and audio
+    plt.scatter(x[placement_peakIndices], placement_peakHeights,marker="x",color="black",s=50,label="Placement Pulse(s)")
+    plt.scatter(x[audio_peakIndices],audio_peakHeights,marker="x",color="red", s=50,label="Audio Tone(s)")
+
+    # tool name
+    plt.text(min(x)+0.05,max(place)+0.9,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
+
+    # plotting options
+    plt.title("Guinness Generator Placement Output and Audio Tones\nSet Voltage = {}V, Input File Name = '{}'\nAverage Tone Delay = {:.4f} seconds".format(voltageLimit, filename, average_delay))
+    plt.xlim(min(x),max(x))
+    plt.ylim(min(place)-1,max(place)+1)
+    plt.legend(loc="lower right")
+    plt.xlabel(headers[0])
+    plt.ylabel(headers[1])
+
+    # display the plot
+    plt.show()
 
 def CheckCSV(filepath):
     csvArray = np.genfromtxt(open(filepath), delimiter=",")
