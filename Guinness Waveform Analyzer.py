@@ -633,12 +633,34 @@ def guinnessAudioSync(filepath,voltageLimit):
     filename = os.path.basename(filepath)
     
     place = signal.detrend(place, type="constant")
-    # audio = signal.detrend(audio, type="constant")
+    # audio = signal.detrend(audio, type="constant")    # was messing up the signal
+    working_audio = audio   # modifiable copy of the placement audio to get indices of the start of the tone(s)
     
     # vertically offset the audio signal for clearer graphing/visualization
-    audio_diff2 = np.abs(np.gradient(np.gradient(audio)))
     audio = audio + 0.5
-
+        
+    cutoff = 0.5
+    working_audio[(working_audio<cutoff)&(working_audio>-cutoff)] = 0
+    # plt.plot(working_audio)
+    # plt.show()
+    
+    audio_peakIndices = []
+    z = 100
+    
+    '''
+    See if the value of z can also be made dependent on the length of the input file
+    '''
+    
+    for i in range(z,len(working_audio)-z,1):
+        if sum(working_audio[i-z:i])==0 and working_audio[i+1]!=0 and working_audio[i]==0:
+            audio_peakIndices.append(i)
+    audio_peakIndices = np.array(audio_peakIndices)
+    audio_peakHeights = audio[audio_peakIndices]
+    plt.plot(working_audio)
+    zeroes = np.zeros(np.shape(audio_peakIndices))
+    plt.scatter(audio_peakIndices,zeroes,marker='X',c='red')
+    plt.show()
+    
     # plot placement and audio
     plt.plot(x, place, label = "Placement Output", color = "blue")
     plt.plot(x, audio, label = "Placement Audio", color = "orange")
@@ -650,13 +672,13 @@ def guinnessAudioSync(filepath,voltageLimit):
     
     placement_peakHeights = place[placement_peakIndices]
 
-    audio_peakIndices, _ = signal.find_peaks(audio_diff2, height=0.15, distance=2500)
-    audio_peakHeights = audio[audio_peakIndices]
+    # audio_peakIndices, _ = signal.find_peaks(audio_diff2, height=0.15, distance=1000)
+    
 
     diff = []
     for i in range(0,len(audio_peakIndices),1):
         for j in range(0,len(placement_peakIndices),1):
-            if np.abs(audio_peakIndices[i]-placement_peakIndices[j])<1500:
+            if np.abs(audio_peakIndices[i]-placement_peakIndices[j])<500:
                 diff_temp = np.abs(x[audio_peakIndices[i]]-x[placement_peakIndices[j]])
                 diff.append(diff_temp)
                 plt.text(x[placement_peakIndices[j]]+0.02,-place[placement_peakIndices[j]]+float(0.25*float(voltageLimit)),"Delay = {:.4f}s".format(diff_temp))
@@ -667,8 +689,8 @@ def guinnessAudioSync(filepath,voltageLimit):
     average_delay = np.mean(diff)
 
     # plot peaks of placement and audio
-    plt.scatter(x[placement_peakIndices], placement_peakHeights,marker="x",color="black",s=50,label="Placement Pulse(s)")
-    plt.scatter(x[audio_peakIndices],audio_peakHeights,marker="x",color="red", s=50,label="Audio Tone(s)")
+    plt.scatter(x[placement_peakIndices], placement_peakHeights,marker="x",color="magenta",s=50,label="Placement Pulse(s)")
+    plt.scatter(x[audio_peakIndices],audio_peakHeights,marker="x",color="black", s=50,label="Audio Tone(s) Onset",zorder=5)
 
     # tool name
     plt.text(min(x)+0.05,max(place)+0.9,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
