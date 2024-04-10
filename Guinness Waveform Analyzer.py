@@ -192,7 +192,7 @@ def plotContents(filepath, columns):
     if columns == 3:
         z_ = csvArray[2:-2,2]
         _, z = evenColumns(x,z_)
-        z = signal.detrend(x,type="constant")
+        # z = signal.detrend(x,type="constant")
         plt.plot(x,z,label="Column 3 of the input file.")
     
     plt.title("Preview plot of the input file.\n{}".format(str_datetime_rn))
@@ -642,7 +642,7 @@ def guinnessAudioSync(filepath,voltageLimit):
     filename = os.path.basename(filepath)
     
     place = signal.detrend(place, type="constant")
-    audio = signal.detrend(audio, type="constant")
+    # audio = signal.detrend(audio, type="constant")
     
     # vertically offset the audio signal for clearer graphing/visualization
     audio = audio + 0.5
