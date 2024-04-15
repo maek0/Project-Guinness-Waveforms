@@ -240,26 +240,42 @@ def guinnessRampFilter(filepath,voltageLimit):
     filename = os.path.basename(filepath)
     y_full = signal.detrend(y_full, type="constant")
     
-    # if time permits, change dist to be dependent on the time delta of the whole input file
-    backup = 1000
-    dist = 100
+    fs = np.ceil(len(x_full)/(x_full[-1]-x_full[0]))
+    dist = int(np.floor(fs*0.45))
+    
+    backup = int(np.ceil(fs*0.55))
+    
+    if float(voltageLimit)<100:
+        h = 5.5
+    else:
+        h = 8
     
     # find the indices of the peaks of the output energy signal 
-    y_startcutoff_xvalues = signal.find_peaks(y_full, height=10, distance=dist)
-    y_endcutoff_xvalues = signal.find_peaks(y_full,height=float(voltageLimit), distance=dist)
-
-    if len(y_endcutoff_xvalues[0])>10:
-        x = x_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][10]]
-        y = y_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][10]]
-    elif len(y_endcutoff_xvalues[0])>5:
-        x = x_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][5]]
-        y = y_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][5]]
-    else:
-        x = x_full[(y_startcutoff_xvalues[0][0]-backup):len(x_full)]
-        y = y_full[(y_startcutoff_xvalues[0][0]-backup):len(y_full)]
+    y_startcutoff_xvalues = signal.find_peaks(y_full, height=h, distance=dist)
+    
+    ## section was originally for cutting of the tail end of input signal - removed so the behavior is more clear
+        # y_endcutoff_xvalues = signal.find_peaks(y_full,height=float(voltageLimit), distance=dist)
+        # if len(y_endcutoff_xvalues[0])>10:
+        #     x = x_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][10]]
+        #     y = y_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][10]]
+        # elif len(y_endcutoff_xvalues[0])>5:
+        #     x = x_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][5]]
+        #     y = y_full[(y_startcutoff_xvalues[0][0]-backup):y_endcutoff_xvalues[0][5]]
+        # else:
+    
+    x = x_full[(y_startcutoff_xvalues[0][0]-backup):len(x_full)]
+    y = y_full[(y_startcutoff_xvalues[0][0]-backup):len(y_full)]
+    
+    ## debugging height and distance limits against input voltage
+        # plt.plot(x_full,y_full)
+        # plt.plot(x,y)
+        # plt.plot(x_full[y_startcutoff_xvalues[0][0]],y_full[y_startcutoff_xvalues[0][0]], "x", color = "red")
+        # plt.plot(x_full[y_startcutoff_xvalues[0][0]-dist],y_full[y_startcutoff_xvalues[0][0]-dist], "x", color = "blue")
+        # plt.plot(x_full[y_startcutoff_xvalues[0][0]-backup],y_full[y_startcutoff_xvalues[0][0]-backup], "x", color = "black")
+        # plt.show()
     
     # find the indices of the peaks of the output energy signal (not including voltage checks)
-    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=4,prominence=10,distance=dist)
+    y_peaks_xvalues, ypeak_properties = signal.find_peaks(y, height=4,distance=dist)
 
     # get the y-values of the output energy peaks
     y_peaks_yvalues = ypeak_properties["peak_heights"]
@@ -267,6 +283,14 @@ def guinnessRampFilter(filepath,voltageLimit):
     # find the first peak of the output energy signal (not including voltage checks)
     first_peakX = x[y_peaks_xvalues[0]]
     first_peakY = y_peaks_yvalues[0]
+    
+    ## attempt to mark impedance ping voltage peaks - removed since it will be much more complicated to do accurately across impedance and voltage ranges
+        # pingY = y_full[0:(y_startcutoff_xvalues[0][0]-backup)]
+        # ping_peakX, pingProperties = signal.find_peaks(pingY,height=3.5,prominence=5,distance=dist)
+        # # print(ping_peakX)
+        # ping_xvalues = x_full[ping_peakX]
+        # ping_yvalues = pingProperties["peak_heights"]
+        # # print(ping_yvalues)
     
     # find the cutoff voltage = 66% of the input voltage limit
     cutoff = 0.66*float(voltageLimit)
@@ -281,8 +305,8 @@ def guinnessRampFilter(filepath,voltageLimit):
         ind_limit = np.argmax(y_peaks_yvalues>=float(voltageLimit))
     
     # get all peaks BEFORE the indexed cutoff value - this is when the generator should be ramping at 5V/s
-    fiveVoltRampY = y_peaks_yvalues[:(ind_cutoff-1)]
-    fiveVoltRampX = x[y_peaks_xvalues[:(ind_cutoff-1)]]
+    fiveVoltRampY = y_peaks_yvalues[:(ind_cutoff)]
+    fiveVoltRampX = x[y_peaks_xvalues[:(ind_cutoff)]]
     
     # get all peaks AFTER the indexed cutoff value and UNTIL the peaks reach the voltage limit - this is when the generator should be ramping at 2V/s
     twoVoltRampY = y_peaks_yvalues[ind_cutoff:ind_limit]
@@ -295,21 +319,26 @@ def guinnessRampFilter(filepath,voltageLimit):
     twoV_rsq, twoV_slope, twoV_intercept, twoV_fit = linearRegression(twoVoltRampX, twoVoltRampY)
     
     # plot the raw signal
-    plt.plot(x,y, color = 'blue')
+    plt.plot(x_full,y_full)
     
     # plot the voltage peaks of the ramping signal
     plt.scatter(fiveVoltRampX,fiveVoltRampY, color = 'green')
     plt.scatter(twoVoltRampX,twoVoltRampY, color = 'orange')
     
+    # plt.plot(ping_xvalues,ping_yvalues, "v", color = "black", label = "Impedance Pings", markersize = 4, markeredgewidth = 1.5)
+    
     # mark the first peak of the output energy signal on the plot
     plt.plot(first_peakX,first_peakY, "x", color = "red", label = "First Peak = {:.2f}V".format(first_peakY), markersize = 8, markeredgewidth = 2)
 
+    # plotting the voltage setpoint
+    plt.axhline(float(voltageLimit), label = "Voltage Limit = {:.2f}V".format(float(voltageLimit)), linestyle = "--", color = "gray")
+    
     # plotting the 66%(voltage limit)
-    plt.axhline(cutoff, label = "66% Voltage Limit = {:.2f}V".format(cutoff), linestyle = "--", color = "black")
+    plt.axhline(cutoff, label = "66% Voltage Limit = {:.2f}V".format(cutoff), linestyle = ":", color = "black")
     
     # plotting options
     plt.title("Guinness Generator Output Ramp, Voltage Limit = {}V\nInput file name: '{}'".format(voltageLimit, filename))
-    plt.text(min(x)+1,max(y)-3,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
+    plt.text(min(x_full)+1,float(voltageLimit)+5,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
     plt.xlabel(headers[0])
     plt.ylabel(headers[1])
     
@@ -320,8 +349,8 @@ def guinnessRampFilter(filepath,voltageLimit):
     plt.plot(twoVoltRampX, twoV_fit, color = 'orange', label = "2nd Segment: y = {:.2f}x + {:.2f}\n$R^2$ = {:.2f}".format(twoV_slope[0], twoV_intercept, twoV_rsq))
 
     # plotting options
-    plt.xlim(min(x),max(x))
-    plt.ylim(min(y)-3,max(y)+3)
+    plt.xlim(min(x_full),max(x_full))
+    plt.ylim((-float(voltageLimit))-10,float(voltageLimit)+10)
     plt.legend(loc="lower left")
     
     # display the plot
@@ -395,6 +424,7 @@ def guinnessTHD(filepath,voltageLimit):
     # display the plot
     plt.show()
     
+    
 def averagePkAmp(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
     str_datetime_rn = datetime_rn.strftime("%d-%b-%Y, %X %Z")
@@ -420,9 +450,7 @@ def averagePkAmp(filepath,voltageLimit):
     heightLim = int(voltageLimit)-5
     
     peaks_xvalues, peaks_xvalues_properties = signal.find_peaks(y, height=float(heightLim),prominence=10,distance=dist)
-    # print(peaks_xvalues)
     peaks_yvalues = peaks_xvalues_properties["peak_heights"]
-    # print(peaks_yvalues)
 
     avgAmp = np.mean(peaks_yvalues)
     # print(avgAmp)
@@ -445,6 +473,7 @@ def averagePkAmp(filepath,voltageLimit):
 
     # display the plot
     plt.show()
+
 
 def calcRiseFall(filepath,voltageLimit):
     datetime_rn = datetime.datetime.now()
@@ -491,9 +520,7 @@ def calcRiseFall(filepath,voltageLimit):
 
     y_windowed = y[first_cutoff_index:second_cutoff_index]
     x_windowed = x[first_cutoff_index:second_cutoff_index]
-
-    # plt.plot(x_windowed,y_windowed)
-    # plt.show()
+    
 
     ten = 0.1*float(voltageLimit)
     ninety = 0.9*float(voltageLimit)
@@ -503,6 +530,7 @@ def calcRiseFall(filepath,voltageLimit):
     positive_ninety = np.where(y_windowed>=ninety)
     negative_ten = np.where(y_windowed<=-ten)
     negative_ninety = np.where(y_windowed<=-ninety)
+    
     
     positive_rise_x = [x_windowed[positive_ten][0], x_windowed[positive_ninety][0]]
     positive_rise_y = [y_windowed[positive_ten][0], y_windowed[positive_ninety][0]]
@@ -522,6 +550,7 @@ def calcRiseFall(filepath,voltageLimit):
     switchPoly = np.poly1d(switch_coefficients)
     negativePoly = np.poly1d(negative_fall_coefficients)
     
+    
     length = 500000
     positiveFitX = np.linspace(x_windowed[0]-delay, x_windowed[positive_ninety][-1], length)
     switchFitX = np.linspace(x_windowed[positive_ninety][0], x_windowed[negative_ninety][-1], length)
@@ -530,6 +559,7 @@ def calcRiseFall(filepath,voltageLimit):
     positiveFitY = positivePoly(positiveFitX)
     switchFitY = switchPoly(switchFitX)
     negativeFitY = negativePoly(negativeFitX)
+    
     
     ## Assigning min and max points of the pulse to variables ##
     positive_ten_rise = positiveFitX[np.where(positiveFitY>=ten)][0]
