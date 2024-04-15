@@ -474,7 +474,7 @@ def calcRiseFall(filepath,voltageLimit):
 
     # plt.plot(y_diff2)
 
-    peak_indices, peak_info = signal.find_peaks(y_diff2,height=0.06)
+    peak_indices, _ = signal.find_peaks(y_diff2,height=0.06)
     # print(peak_indices)
 
     # peak_heights = peak_info['peak_heights']
@@ -504,7 +504,6 @@ def calcRiseFall(filepath,voltageLimit):
     negative_ten = np.where(y_windowed<=-ten)
     negative_ninety = np.where(y_windowed<=-ninety)
     
-    
     positive_rise_x = [x_windowed[positive_ten][0], x_windowed[positive_ninety][0]]
     positive_rise_y = [y_windowed[positive_ten][0], y_windowed[positive_ninety][0]]
     
@@ -531,9 +530,6 @@ def calcRiseFall(filepath,voltageLimit):
     positiveFitY = positivePoly(positiveFitX)
     switchFitY = switchPoly(switchFitX)
     negativeFitY = negativePoly(negativeFitX)
-    
-    # print(negativeFitX)
-    
     
     ## Assigning min and max points of the pulse to variables ##
     positive_ten_rise = positiveFitX[np.where(positiveFitY>=ten)][0]
@@ -622,6 +618,7 @@ def guinnessAudioSync(filepath,voltageLimit):
     headers = ["Time (s)", "Voltage (V)"]
     csvFile = open(filepath)
     csvArray = np.genfromtxt(csvFile, delimiter=",")
+    
     x_ = csvArray[2:-2,0]
     place_ = csvArray[2:-2,1]
     audio_ = csvArray[2:-2,2]
@@ -633,52 +630,73 @@ def guinnessAudioSync(filepath,voltageLimit):
     filename = os.path.basename(filepath)
     
     place = signal.detrend(place, type="constant")
-    # audio = signal.detrend(audio, type="constant")    # was messing up the signal
-    working_audio = audio   # modifiable copy of the placement audio to get indices of the start of the tone(s)
+    audio = signal.detrend(audio, type="constant")    # possibly messing up some signals... keeping unless it actually becomes an issue
     
+    working_audio = audio   # modifiable copy of the placement audio to get indices of the start of the tone(s)
+    working_place = place   # modifiable copy of the placement signal to get indices of the end of the pulse(s)
+
     # vertically offset the audio signal for clearer graphing/visualization
     audio = audio + 0.5
         
-    cutoff = 0.5
-    working_audio[(working_audio<cutoff)&(working_audio>-cutoff)] = 0
-    # plt.plot(working_audio)
-    # plt.show()
+    cutoff_a = 0.2
+    if float(voltageLimit)<=0.1:
+        cutoff_p = 0.08
+    elif float(voltageLimit)<=1:
+        cutoff_p = 0.11
+    else:
+        cutoff_p = 0.5
+    
+    working_audio[(working_audio<cutoff_a)&(working_audio>-cutoff_a)] = 0
+    working_place[(working_place<cutoff_p)&(working_place>-cutoff_p)] = 0
     
     audio_peakIndices = []
-    z = 100
+    placement_peakIndices = []
+    
+    fs = np.ceil(len(x)/(x[-1]-x[0]))
+    z = int(np.floor(fs/10))
+    # print(z)
+    # z = 100
     
     '''
-    See if the value of z can also be made dependent on the length of the input file
+    To do: make z dependent on the length of the input file (check other functions for this too)
     '''
     
-    for i in range(z,len(working_audio)-z,1):
+    for i in range(z,len(working_audio)-1,1):
         if sum(working_audio[i-z:i])==0 and working_audio[i+1]!=0 and working_audio[i]==0:
             audio_peakIndices.append(i)
     audio_peakIndices = np.array(audio_peakIndices)
     audio_peakHeights = audio[audio_peakIndices]
-    plt.plot(working_audio)
-    zeroes = np.zeros(np.shape(audio_peakIndices))
-    plt.scatter(audio_peakIndices,zeroes,marker='X',c='red')
-    plt.show()
+    
+    for i in range(z,len(working_place)-1,1):
+        if sum(working_place[i-z:i])==0 and working_place[i+1]!=0 and working_place[i]==0:
+            placement_peakIndices.append(i)
+    placement_peakIndices = np.array(placement_peakIndices)
+    # placement_peakHeights = place[placement_peakIndices]
+    
+    # plt.plot(working_audio)
+    # zeroes = np.zeros(np.shape(audio_peakIndices))
+    # plt.scatter(audio_peakIndices,zeroes,marker='X',c='red')
+    # plt.show()
+    # plt.plot(place)
+    # zeroes = np.zeros(np.shape(placement_peakIndices))
+    # plt.scatter(placement_peakIndices,zeroes,marker='X',c='red')
+    # plt.show()
     
     # plot placement and audio
-    plt.plot(x, place, label = "Placement Output", color = "blue")
-    plt.plot(x, audio, label = "Placement Audio", color = "orange")
+    plt.plot(x, place, label = "Placement Output", color = "blue",zorder=2)
+    plt.plot(x, audio, label = "Placement Audio", color = "orange",zorder=1)
 
-    if float(voltageLimit) >= 1.0:
-        placement_peakIndices, _ = signal.find_peaks(place, height=0.4, distance=500)
-    else:
-        placement_peakIndices, _ = signal.find_peaks(place, height=0.05, distance=500)
+    # if float(voltageLimit) >= 0.5:
+    #     placement_peakIndices, _ = signal.find_peaks(place, height=0.4, distance=500)
+    # else:
+    #     placement_peakIndices, _ = signal.find_peaks(place, height=0.075, distance=500)
     
-    placement_peakHeights = place[placement_peakIndices]
-
-    # audio_peakIndices, _ = signal.find_peaks(audio_diff2, height=0.15, distance=1000)
-    
-
+    dist = fs/3
     diff = []
+    
     for i in range(0,len(audio_peakIndices),1):
         for j in range(0,len(placement_peakIndices),1):
-            if np.abs(audio_peakIndices[i]-placement_peakIndices[j])<500:
+            if np.abs(audio_peakIndices[i]-placement_peakIndices[j])<dist:
                 diff_temp = np.abs(x[audio_peakIndices[i]]-x[placement_peakIndices[j]])
                 diff.append(diff_temp)
                 plt.text(x[placement_peakIndices[j]]+0.02,-place[placement_peakIndices[j]]+float(0.25*float(voltageLimit)),"Delay = {:.4f}s".format(diff_temp))
@@ -687,10 +705,13 @@ def guinnessAudioSync(filepath,voltageLimit):
 
     diff = np.array(diff)
     average_delay = np.mean(diff)
-
+    
     # plot peaks of placement and audio
-    plt.scatter(x[placement_peakIndices], placement_peakHeights,marker="x",color="magenta",s=50,label="Placement Pulse(s)")
-    plt.scatter(x[audio_peakIndices],audio_peakHeights,marker="x",color="black", s=50,label="Audio Tone(s) Onset",zorder=5)
+    # plt.scatter(x[placement_peakIndices], placement_peakHeights,marker="x",color="magenta",s=50,label="Placement Pulse(s) Onset",zorder=3)
+    # plt.scatter(x[audio_peakIndices],audio_peakHeights,marker="x",color="black", s=50,label="Audio Tone(s) Onset",zorder=4)
+    
+    plt.scatter(x[placement_peakIndices], np.zeros(np.shape(placement_peakIndices)),marker="x",color="magenta",s=50,label="Placement Pulse(s) Onset",zorder=3)
+    plt.scatter(x[audio_peakIndices], np.ones(np.shape(audio_peakHeights))/2,marker="x",color="black", s=50,label="Audio Tone(s) Onset",zorder=4)
 
     # tool name
     plt.text(min(x)+0.05,max(place)+0.9,"ST-0001-066-{}, {}".format(toolVersion,str_datetime_rn),fontsize="small")
